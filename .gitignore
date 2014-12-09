@@ -1,0 +1,9 @@
+#eclispe files
+*.classpath
+*.project
+/.settings/*
+
+#build products
+/bin/*
+*.jar
+*.class
