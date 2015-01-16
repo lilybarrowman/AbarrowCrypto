@@ -59,10 +59,13 @@ public class PairityBitCodecTest {
     // 0P000 0000P -> 00000100
     (byte)0x04};
     
-    assertArrayEquals(PairityBitCodec.decode(oddPairity, true), expectedOut);
-    assertArrayEquals(PairityBitCodec.decode(evenPairity, false), expectedOut);
+    assertArrayEquals(PairityBitCodec.decode(oddPairity, PairityBitType.ODD), expectedOut);
+    assertArrayEquals(PairityBitCodec.decode(evenPairity, PairityBitType.EVEN), expectedOut);
     
-    assertArrayEquals(PairityBitCodec.encode(expectedOut, true), oddPairity);
-    assertArrayEquals(PairityBitCodec.encode(expectedOut, false), evenPairity);
+    assertArrayEquals(PairityBitCodec.encode(expectedOut, PairityBitType.ODD), oddPairity);
+    assertArrayEquals(PairityBitCodec.encode(expectedOut, PairityBitType.EVEN), evenPairity);
+    
+    assertArrayEquals(PairityBitCodec.encode(oddPairity, PairityBitType.NONE), oddPairity);
+    assertArrayEquals(PairityBitCodec.decode(oddPairity, PairityBitType.NONE), oddPairity);
   }
 }

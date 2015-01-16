@@ -2,12 +2,18 @@ package core;
 
 public class PairityBitCodec {
 
-  public static byte[] encode(byte[] input, boolean isParityBitOdd) {
+  public static byte[] encode(byte[] input, PairityBitType pairityType) {
+    byte[] out;
+    if (pairityType == PairityBitType.NONE) {
+      out = new byte[input.length];
+      System.arraycopy(input, 0, out, 0, input.length);
+      return out;
+    }
     int rem = input.length % 7;
     rem = (rem == 0) ? 0 : rem + 1;
-    byte[] out = new byte[input.length / 7 * 8 + input.length % 7];
+     out = new byte[input.length / 7 * 8 + rem];
 
-    int pairityBit = isParityBitOdd ? 1 : 0;
+    int pairityBit = (pairityType == PairityBitType.ODD) ? 1 : 0;
 
     int outIndex = 0;
     int inIndex = 0;
@@ -130,8 +136,16 @@ public class PairityBitCodec {
     return out;
   }
 
-  public static byte[] decode(byte[] input, boolean isParityBitOdd) {
-    byte[] out = new byte[input.length / 8 * 7 + input.length % 8];
+  public static byte[] decode(byte[] input, PairityBitType pairityType) {
+    byte[] out;
+    
+    if (pairityType == PairityBitType.NONE) {
+      out = new byte[input.length];
+      System.arraycopy(input, 0, out, 0, input.length);
+      return out;
+    }
+        
+    out = new byte[input.length / 8 * 7 + input.length % 8];
 
     boolean failedPairity = false;
 
@@ -145,7 +159,7 @@ public class PairityBitCodec {
 
       int a = input[inIndex];
       inIndex++;
-      if (!verifyPairity(a, isParityBitOdd)) {
+      if (!verifyPairity(a, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -160,7 +174,7 @@ public class PairityBitCodec {
 
       int b = input[inIndex];
       inIndex++;
-      if (!verifyPairity(b, isParityBitOdd)) {
+      if (!verifyPairity(b, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -181,7 +195,7 @@ public class PairityBitCodec {
 
       int c = input[inIndex];
       inIndex++;
-      if (!verifyPairity(c, isParityBitOdd)) {
+      if (!verifyPairity(c, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -203,7 +217,7 @@ public class PairityBitCodec {
 
       int d = input[inIndex];
       inIndex++;
-      if (!verifyPairity(d, isParityBitOdd)) {
+      if (!verifyPairity(d, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -224,7 +238,7 @@ public class PairityBitCodec {
 
       int e = input[inIndex];
       inIndex++;
-      if (!verifyPairity(e, isParityBitOdd)) {
+      if (!verifyPairity(e, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -244,7 +258,7 @@ public class PairityBitCodec {
 
       int f = input[inIndex];
       inIndex++;
-      if (!verifyPairity(f, isParityBitOdd)) {
+      if (!verifyPairity(f, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -264,7 +278,7 @@ public class PairityBitCodec {
 
       int g = input[inIndex];
       inIndex++;
-      if (!verifyPairity(g, isParityBitOdd)) {
+      if (!verifyPairity(g, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -284,7 +298,7 @@ public class PairityBitCodec {
 
       int h = input[inIndex];
       inIndex++;
-      if (!verifyPairity(h, isParityBitOdd)) {
+      if (!verifyPairity(h, pairityType)) {
         failedPairity = true;
         break;
       }
@@ -302,15 +316,36 @@ public class PairityBitCodec {
     return out;
   }
 
-  public static boolean verifyPairity(int b, boolean isParityBitOdd) {
-    return verifyPairity((byte) b, isParityBitOdd);
+  public static boolean verifyPairity(int b, PairityBitType pairtyType) {
+    if (pairtyType == PairityBitType.NONE) {
+      return true;
+    }
+    
+    return verifyPairity((byte) b, pairtyType);
+  }
+  
+  public static boolean verifyPairity(byte[] input, PairityBitType pairtyType) {
+    if (pairtyType == PairityBitType.NONE) {
+      return true;
+    }
+    
+    for (int n = 0; n < input.length; n++) {
+      if (!verifyPairity(input[n], pairtyType)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  public static boolean verifyPairity(byte b, boolean isParityBitOdd) {
+  public static boolean verifyPairity(byte b, PairityBitType pairtyType) {
+    if (pairtyType == PairityBitType.NONE) {
+      return true;
+    }
+    
     // last bit of the byte
     int parityBit = b & 0x1;
     // if the parityBit is 1 and isParityBitOdd is true or
     // parityBit is 1 and isParityBitOdd is false
-    return (parityBit == 1) == isParityBitOdd;
+    return (parityBit == 1) == (pairtyType == PairityBitType.ODD);
   }
 }
