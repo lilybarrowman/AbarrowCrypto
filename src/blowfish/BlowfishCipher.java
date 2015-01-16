@@ -241,7 +241,7 @@ public class BlowfishCipher extends AsymmetricBlockCipher {
     int L = lRef.intValue();
     int R = rRef.intValue();
     
-    for (int i = BlowfishCipher.ROUNDS; i >= 0; i -= 2) {
+    for (int i = BlowfishCipher.ROUNDS; i > 0; i -= 2) {
       L ^= P[i + 1];
       R ^= f(L);
       R ^= P[i];
