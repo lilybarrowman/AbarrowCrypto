@@ -45,7 +45,7 @@ public class CryptoUtils {
       // [6] 1111 1100
       0xfc,
       // [7] 1111 1110
-      0x7e,
+      0xfe,
       // [8] 1111 1111
       0xff };
 
@@ -92,8 +92,8 @@ public class CryptoUtils {
     }
   }
 
-  public static void intToBytes(int val, byte[] bytes, int start) {
-    intToBytes(val, bytes, start, false);
+  public static byte[] intToBytes(int val, byte[] bytes, int start) {
+    return intToBytes(val, bytes, start, false);
   }
 
   public static void xorIntArray(int[] ints, int val) {
@@ -102,7 +102,7 @@ public class CryptoUtils {
     }
   }
 
-  public static void intToBytes(int val, byte[] bytes, int start, boolean isLittleEndian) {
+  public static byte[] intToBytes(int val, byte[] bytes, int start, boolean isLittleEndian) {
     if (isLittleEndian) {
       bytes[start + 3] = (byte) ((val >>> 24) & 0xff);
       bytes[start + 2] = (byte) ((val >>> 16) & 0xff);
@@ -114,6 +114,7 @@ public class CryptoUtils {
       bytes[start + 2] = (byte) ((val >>> 8) & 0xff);
       bytes[start + 3] = (byte) (val & 0xff);
     }
+    return bytes;
   }
 
   public static int[] intArrayFromBytes(byte[] bytes, int start, int length) {
@@ -295,6 +296,39 @@ public class CryptoUtils {
     }
     return output;
   }
+  
+  public static int getBitFromByteArray(byte[] bytes, int bitIndex) {
+    int bitPos = bitIndex % 8;
+    int firstN = bytes[bitIndex / 8] & FIRST_N_BITS[bitPos + 1];
+    return ((bytes[bitIndex / 8] & FIRST_N_BITS[bitPos + 1]) >>> (7 - bitPos)) & 0x1;
+  }
+  
+  public static byte[] permuteByteArrayByBit(byte[] input, int srcPos, byte[] output, int[] permutation) {
+    int c = 0;
+    int n = 0;    
+    boolean going = true;
+    while (going) {
+      int val = 0;
+      for (int i = 0; i < 8; i ++) {
+        //we've exhausted all the bits
+        if (c >= permutation.length) {
+          going = false;
+          break;
+        }
+        
+        //add the new bit
+        val |= getBitFromByteArray(input, srcPos + permutation[c]) << (7 - i);
+        c++;
+      }
+      if (output.length > n) {
+        output[n] = (byte)val;
+        n++;
+      }
+    }
+    
+    return output;
+  }
+  
 
   public static byte[] copyBitsFromByteArray(byte[] input, int startingSrcBit, int bitLength, byte[] output,
       int startingDestBit) {
@@ -332,14 +366,12 @@ public class CryptoUtils {
     return output;
   }
   
-  public static byte[] rotateByteArray(byte[] input, int bitLength, int digitsToShiftRightIsPositive) {
-    if (digitsToShiftRightIsPositive > 0) {
-      int bitsRight = digitsToShiftRightIsPositive;
-      return copyBitsFromByteArray(input, bitLength - bitsRight, bitsRight, copyBitsFromByteArray(input, 0, bitLength - bitsRight, new byte[input.length], bitsRight), 0);
-    } else {
-      int bitsLeft = -digitsToShiftRightIsPositive;
-      return copyBitsFromByteArray(input, bitsLeft, bitLength - bitsLeft, copyBitsFromByteArray(input, 0, bitsLeft, new byte[input.length], bitLength - bitsLeft), 0);
-    }
+  public static byte[] rotateByteArrayRight(byte[] input, int bitLength, int bitsRight, byte[] output) {
+    return copyBitsFromByteArray(input, bitLength - bitsRight, bitsRight, copyBitsFromByteArray(input, 0, bitLength - bitsRight, output, bitsRight), 0);
+  }
+  
+  public static byte[] rotateByteArrayLeft(byte[] input, int bitLength, int bitsLeft, byte[] output) {
+    return copyBitsFromByteArray(input, bitsLeft, bitLength - bitsLeft, copyBitsFromByteArray(input, 0, bitsLeft, output, bitLength - bitsLeft), 0);
   }
 
   public static int getLastBitsFromBytes(int byteInt, int start, int len) {

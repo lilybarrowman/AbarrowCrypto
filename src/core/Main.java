@@ -1,5 +1,7 @@
 package core;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import des.DES;
 import blowfish.Bcrypt;
 import blowfish.BlowfishCipher;
@@ -15,7 +17,7 @@ import sha.SHA512;
 public class Main {
 
   public static void main(String[] args) {
-    /*System.out.println((new SHA512()).addString("abc").computeHashString());
+    System.out.println((new SHA512()).addString("abc").computeHashString());
     System.out.println((new SHA1()).addString("abc").computeHashString());
     System.out.println((new MD5()).addString("abc").computeHashString());
 
@@ -39,14 +41,15 @@ public class Main {
     System.out.println(new Bcrypt("Twentytwocharactersalt".getBytes(), 10).addBytes("SuperSecurePassword".getBytes())
         .computeHashString());
 
-    boolean useSlowRandom = true;
-    
-    RandomVisualizer.start(useSlowRandom ? new HasherRandom() : new HasherRandom(new Bcrypt("123456890123456".getBytes(), 4),
-        new byte[0]));*/
-    
-    DES des = new DES(PairityBitCodec.encode("1234567".getBytes(), true), true);
-    
+    DES des = new DES("12345678".getBytes(), PairityBitType.NONE);
+    byte[] out = des.encrypt("abc".getBytes());
+    System.out.println(CryptoUtils.byteArrayToHexString(out));
 
+    
+    
+    boolean useFasterRandom = true;
+    RandomVisualizer.start(useFasterRandom ? new HasherRandom() : new HasherRandom(new Bcrypt("123456890123456".getBytes(), 4),
+        new byte[0]));
   }
 
 }

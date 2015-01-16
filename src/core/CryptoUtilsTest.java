@@ -61,14 +61,14 @@ public class CryptoUtilsTest {
         //1100 1001
         (byte)0xc9
     };
-    assertArrayEquals(CryptoUtils.rotateByteArray(example, 16, 4), new byte[]{
+    assertArrayEquals(CryptoUtils.rotateByteArrayRight(example, 16, 4, new byte[2]), new byte[]{
       //1001 0110
       (byte)0x96,
       //1111 0110
       (byte)0xfc
     });
     
-    assertArrayEquals(CryptoUtils.rotateByteArray(example, 16, -4), new byte[]{
+    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 16, 4, new byte[2]), new byte[]{
       //1111 1100
       (byte)0xfc,
       //1001 0110
@@ -76,11 +76,49 @@ public class CryptoUtilsTest {
     });
     
     //in this case we're only rotating part of the array
-    assertArrayEquals(CryptoUtils.rotateByteArray(example, 12, -4), new byte[]{
+    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 12, 4, new byte[2]), new byte[]{
       //1111 1100
       (byte)0xfc,
       //0110 0000
       (byte)0x60
+    });
+  }
+  
+  @Test
+  public void testPermuteByteArrayByBit() {
+    byte[] input = {
+        //0011 0111
+        (byte)0x37,
+        //1110 0010
+        (byte)0xe2
+    };
+    byte [] result = CryptoUtils.permuteByteArrayByBit(input, 0, new byte[2], new int[]{
+        15,
+        14,
+        13,
+        12,
+        11,
+        10,
+        9,
+        8,
+        7,
+        6,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+    });
+    
+    //System.out.println(CryptoUtils.byteArrayToBinaryString(input));
+    //System.out.println(CryptoUtils.byteArrayToBinaryString(result));
+    
+    assertArrayEquals(result , new byte[] {
+      //0100 0111
+      (byte)0x47,
+      //1110 1100
+      (byte)0xec
     });
   }
 
