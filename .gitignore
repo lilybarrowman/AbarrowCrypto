@@ -7,3 +7,8 @@
 /bin/*
 *.jar
 *.class
+
+#testresources
+*.jpg
+*.png
+*.txt

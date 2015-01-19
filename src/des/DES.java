@@ -87,6 +87,10 @@ public class DES extends AsymmetricBlockCipher {
   
   private byte[] temp;
 
+  public DES(byte[] key) {
+    this(key, PairityBitType.NONE);
+  }
+  
   public DES(byte[] key, PairityBitType pairityType) {
 
     if (!PairityBitCodec.verifyPairity(key, pairityType)) {

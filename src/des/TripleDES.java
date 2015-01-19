@@ -17,10 +17,17 @@ public class TripleDES extends AsymmetricBlockCipher {
   private byte[] temp1;
   private byte[] temp2;
   
+  public TripleDES(byte[] key) {
+    this(key, PairityBitType.NONE);
+  }
+  
   public TripleDES(byte[] key, PairityBitType pairityType) {
-    des1 = new DES(ArrayUtils.subarray(key, 0, 7), pairityType);
-    des2 = new DES(ArrayUtils.subarray(key, 1, 15), pairityType);
-    des3 = new DES(ArrayUtils.subarray(key, 16, 23), pairityType);
+    des1 = new DES(ArrayUtils.subarray(key, 0, 8), pairityType);
+    des2 = new DES(ArrayUtils.subarray(key, 8, 16), pairityType);
+    des3 = new DES(ArrayUtils.subarray(key, 16, 24), pairityType);
+    
+    temp1=new byte[getBlockBytes()];
+    temp2=new byte[getBlockBytes()];
   }
 
   @Override
@@ -30,7 +37,6 @@ public class TripleDES extends AsymmetricBlockCipher {
 
   @Override
   public void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    
     des1.encryptBlock(input, srcPos, temp1, 0);
     des2.decryptBlock(temp1, 0, temp2, 0);
     Arrays.fill(temp1, CryptoUtils.ZERO_BYTE);
