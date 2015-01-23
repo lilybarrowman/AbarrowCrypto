@@ -24,6 +24,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
@@ -43,7 +44,7 @@ public class StenographyDemo implements ActionListener {
   private JFileChooser followUpFileChooser;
 
   private JFrame frame;
-  private JTextField passwordInput;
+  private JPasswordField passwordInput;
 
   private JButton selectSourceButton;
   private JButton selectMaskButton;
@@ -101,7 +102,7 @@ public class StenographyDemo implements ActionListener {
     state = "";
 
     frame = new JFrame("Stenography Demo");
-    passwordInput = new JTextField("abc");
+    passwordInput = new JPasswordField("abc");
 
     Path root = Paths.get("").toAbsolutePath();
     fileChooser = new JFileChooser(root.toFile());
@@ -146,7 +147,7 @@ public class StenographyDemo implements ActionListener {
       problems = "Select a source.";
     } else if (mask == null) {
       problems = "Select a mask.";
-    } else if ((mask.getWidth() * mask.getHeight()) < source.length) {
+    } else if (!PNGStenographer.canImageHoldData(source.length, mask.getWidth(), mask.getHeight())) {  
       problems = "Select a larger mask or a smaller source.";
     }
 
@@ -187,8 +188,6 @@ public class StenographyDemo implements ActionListener {
       } catch (IOException e) {
         statusLabel.setText("Error reading stenographic file.");
       }
-
-      
 
       TripleDES cipher = new TripleDES(getPaddedPassword());
       byte[] decoded = cipher.decrypt(stenData.bytes);
@@ -238,7 +237,7 @@ public class StenographyDemo implements ActionListener {
 
           TripleDES cipher = new TripleDES(getPaddedPassword());
           byte[] encoded = cipher.encrypt(source);
-          
+
           try {
             PNGStenographer.encode(new StenData(encoded, source.length), mask, outputFile);
             System.out.println("Stenographic image saved!");
@@ -251,12 +250,9 @@ public class StenographyDemo implements ActionListener {
   }
 
   public byte[] getPaddedPassword() {
-    String password = passwordInput.getText();
-    byte[] passwordBytes = passwordInput.getText().getBytes();
-
+    char[] password = passwordInput.getPassword();
     byte[] paddedPassword = new byte[24];
-    System.arraycopy(passwordBytes, 0, paddedPassword, 0, Math.min(24, passwordBytes.length));
-    return paddedPassword;
+    return CryptoUtils.utf8CharArrayToByteAray(password, paddedPassword);
   }
 
 }

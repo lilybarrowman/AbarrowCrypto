@@ -92,6 +92,22 @@ public class CryptoUtils {
     }
   }
 
+  public static byte[] utf16CharArrayToByteAray(char[] input, byte[] output) {
+    for (int i = 0; i < input.length; i++) {
+      int letter = input[i];
+      output[i * 2] = (byte)((letter >>> 8) & 0xff);
+      output[i * 2 + 1] = (byte)(letter & 0xff);
+    }
+    return output;
+  }
+  
+  public static byte[] utf8CharArrayToByteAray(char[] input, byte[] output) {
+    for (int i = 0; i < input.length; i++) {
+      output[i] = (byte)(input[i] & 0xff);
+    }
+    return output;
+  }
+  
   public static byte[] intToBytes(int val, byte[] bytes, int start) {
     return intToBytes(val, bytes, start, false);
   }
