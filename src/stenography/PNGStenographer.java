@@ -32,11 +32,6 @@ public class PNGStenographer {
 
     byte[] lenBytes = CryptoUtils.intToBytes(input.length, new byte[8], 0);
     CryptoUtils.intToBytes(data.plainLen, lenBytes, 4);
-
-    for (int i = 0; i < 3; i++) {
-      pixelData[i] = encodeByte(pixelData[i], lenBytes[i]);
-    }
-    
     
     encodeBytes(pixelData, 0, lenBytes, 0);
     encodeBytes(pixelData, 4, lenBytes, 3);
