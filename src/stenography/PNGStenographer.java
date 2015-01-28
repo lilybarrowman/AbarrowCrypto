@@ -8,15 +8,21 @@ import javax.imageio.ImageIO;
 
 import core.CryptoUtils;
 
-public class PNGStenographer {
+public class PNGStenographer extends Stenographer<BufferedImage, IOException> {
 
-  public static boolean canImageHoldData(int numBytes, int wide, int high) {
+  public boolean canSourceHoldData(int numBytes, BufferedImage source) {
+    int wide = source.getWidth();
+    int high = source.getHeight();
+    
+    return canImageHoldData(numBytes, wide, high);
+  }
+  
+  private boolean canImageHoldData(int numBytes, int wide, int high) {
     int numPixels = 12 + (numBytes + 2) / 3 * 4;
-
     return (wide * high) > numPixels;
   }
   
-  public static void encode(StenData data, BufferedImage source, File dest) throws IOException {
+  public void encode(StenData data, BufferedImage source, File dest) throws IOException  {
     byte[] input = data.bytes;
     
     int wide = source.getWidth();
@@ -51,10 +57,9 @@ public class PNGStenographer {
     resultImage.setRGB(0, 0, wide, high, pixelData, 0, wide);
 
     ImageIO.write(resultImage, "png", dest);
-
   }
   
-  private static void encodeBytes(int[] pixelData, int pixelPos, byte[] data, int dataPos) {
+  private void encodeBytes(int[] pixelData, int pixelPos, byte[] data, int dataPos) {
     int modA = data[dataPos] & 0xff;
     //the loop over here might leave some nonsense data in the image but will simplify the array logic and allow the algorithm to run faster 
     int modB = data[(dataPos + 1) % data.length] & 0xff;
@@ -73,7 +78,7 @@ public class PNGStenographer {
     pixelData[pixelPos + 3] = (src & 0xff000000) + (src & 0xfc0000) + ((modC & 0x30) << 12) + (src & 0xfc00) + ((modC & 0xc) << 6) + (src & 0xfc) + (modC & 0x3);
   }
   
-  private static void decodeBytes(int[] pixelData, int pixelPos, byte[] output, int outPos) {
+  private void decodeBytes(int[] pixelData, int pixelPos, byte[] output, int outPos) {
     int pixA = pixelData[pixelPos];
     int pixB = pixelData[pixelPos + 1];
     int pixC = pixelData[pixelPos + 2];
@@ -88,7 +93,7 @@ public class PNGStenographer {
     }
   }
 
-  public static StenData decode(BufferedImage source) {
+  public StenData decode(BufferedImage source) throws IOException {
 
     int wide = source.getWidth();
     int high = source.getHeight();

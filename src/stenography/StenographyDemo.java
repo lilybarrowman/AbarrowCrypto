@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,20 +16,24 @@ import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
+import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 
+import wavtools.WavSampleData;
 import core.CryptoUtils;
 import des.TripleDES;
 
 public class StenographyDemo implements ActionListener {
 
   private byte[] source;
-  private BufferedImage mask;
+  private BufferedImage imageMask;
+  private WavSampleData wavMask;
   private String fileChooserState;
 
   private File stenFile;
@@ -44,52 +49,17 @@ public class StenographyDemo implements ActionListener {
   private JLabel statusLabel;
   private JButton saveButton;
   private JButton openButton;
+  
+  private ButtonGroup maskTypeGroup;
+  private JRadioButton imageMaskButton;
+  private JRadioButton wavMaskButton;
+  
+  private PNGStenographer pngStenographer;
+  private WAVStenographer wavStenographer;
 
-  private static final FileFilter imagesFileFilter = new FileFilter() {
-
-    @Override
-    public boolean accept(File file) {
-      if (!file.isFile()) {
-        return true;
-      }
-      String name = file.getName();
-      int dotIndex = name.lastIndexOf('.');
-      if (dotIndex < 0) {
-        return false;
-      }
-      String type = name.substring(dotIndex + 1).toLowerCase();
-      return type.equals("jpg") || type.equals("jpeg") || type.equals("png");
-    }
-
-    @Override
-    public String getDescription() {
-      return "PNG or JPG File";
-    }
-
-  };
-
-  private static final FileFilter pngFileFilter = new FileFilter() {
-
-    @Override
-    public boolean accept(File file) {
-      if (!file.isFile()) {
-        return true;
-      }
-      String name = file.getName();
-      int dotIndex = name.lastIndexOf('.');
-      if (dotIndex < 0) {
-        return false;
-      }
-      String type = name.substring(dotIndex + 1).toLowerCase();
-      return type.equals("png");
-    }
-
-    @Override
-    public String getDescription() {
-      return "PNG file";
-    }
-
-  };
+  private static final FileFilter imagesFileFilter = new FormatListFileFilter(new String[]{"jpg", "jpeg", "png"}, "PNG or JPG File");
+  private static final FileFilter pngFileFilter = new FormatListFileFilter(new String[]{"png"}, "PNG File");
+  private static final FileFilter wavFileFilter = new FormatListFileFilter(new String[]{"wav"}, "WAV File");
 
   public StenographyDemo() {
     fileChooserState = "";
@@ -108,6 +78,14 @@ public class StenographyDemo implements ActionListener {
     saveButton = new JButton("Save");
     saveButton.setEnabled(false);
     openButton = new JButton("Open");
+    
+    imageMaskButton = new JRadioButton("Image File");
+    wavMaskButton = new JRadioButton("WAV File");
+    
+    maskTypeGroup = new ButtonGroup(); 
+    maskTypeGroup.add(imageMaskButton);
+    maskTypeGroup.add(wavMaskButton);
+    maskTypeGroup.setSelected(imageMaskButton.getModel(), true);
 
     Container contents = frame.getContentPane();
     contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
@@ -115,6 +93,8 @@ public class StenographyDemo implements ActionListener {
     contents.add(new JLabel("Password"));
     passwordInput.setPreferredSize(new Dimension(200, 20));
     contents.add(passwordInput);
+    contents.add(imageMaskButton);
+    contents.add(wavMaskButton);
     contents.add(selectSourceButton);
     contents.add(selectMaskButton);
     contents.add(statusLabel);
@@ -131,6 +111,15 @@ public class StenographyDemo implements ActionListener {
     selectSourceButton.addActionListener(this);
     fileChooser.addActionListener(this);
     followUpFileChooser.addActionListener(this);
+    imageMaskButton.addActionListener(this);
+    wavMaskButton.addActionListener(this);
+    
+    pngStenographer = new PNGStenographer();
+    wavStenographer = new WAVStenographer();
+  }
+  
+  public boolean isUsingImageMask() {
+    return maskTypeGroup.isSelected(imageMaskButton.getModel());
   }
 
   public boolean validate() {
@@ -138,12 +127,21 @@ public class StenographyDemo implements ActionListener {
     String problems = "";
     if (source == null) {
       problems = "Select a source.";
-    } else if (mask == null) {
-      problems = "Select a mask.";
-    } else if (!PNGStenographer.canImageHoldData(source.length, mask.getWidth(), mask.getHeight())) {
-      problems = "Select a larger mask or a smaller source.";
+    } else{
+      if (isUsingImageMask()) {
+        if (imageMask == null) {
+          problems = "Select a mask.";
+        } else if (!pngStenographer.canSourceHoldData(source.length, imageMask)) {
+          problems = "Select a larger mask or a smaller source.";
+        }
+      } else {
+        if (wavMask == null) {
+          problems = "Select a mask.";
+        } else if (!wavStenographer.canSourceHoldData(source.length, wavMask)) {
+          problems = "Select a larger mask or a smaller source.";
+        }
+      }
     }
-
     statusLabel.setText(problems);
     boolean validated = (problems.length() == 0);
     saveButton.setEnabled(validated);
@@ -156,17 +154,21 @@ public class StenographyDemo implements ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent event) {
-    if (event.getSource() == openButton) {
+    if (event.getSource() == imageMaskButton) {
+      validate();
+    } else if (event.getSource() == wavMaskButton) {
+      validate();
+    } else if (event.getSource() == openButton) {
       fileChooserState = "ChoosingSten";
-      fileChooser.setFileFilter(pngFileFilter);
+      fileChooser.setFileFilter(isUsingImageMask() ? pngFileFilter : wavFileFilter);
       fileChooser.showOpenDialog(frame);
     } else if (event.getSource() == saveButton) {
       fileChooserState = "ChoosingDest";
-      fileChooser.setFileFilter(pngFileFilter);
+      fileChooser.setFileFilter(isUsingImageMask() ? pngFileFilter : wavFileFilter);
       fileChooser.showSaveDialog(frame);
     } else if (event.getSource() == selectMaskButton) {
       fileChooserState = "ChoosingMask";
-      fileChooser.setFileFilter(imagesFileFilter);
+      fileChooser.setFileFilter(isUsingImageMask() ? imagesFileFilter : wavFileFilter);
       fileChooser.showOpenDialog(frame);
     } else if (event.getSource() == selectSourceButton) {
       fileChooserState = "ChoosingSource";
@@ -174,11 +176,17 @@ public class StenographyDemo implements ActionListener {
       fileChooser.showOpenDialog(frame);
     } else if (event.getSource() == followUpFileChooser) {
       File outFile = followUpFileChooser.getSelectedFile();
+      if (outFile == null) {
+        return;
+      }
       StenData stenData = null;
-
       try {
-        stenData = PNGStenographer.decode(ImageIO.read(stenFile));
-      } catch (IOException e) {
+        if (isUsingImageMask()) {
+          stenData = pngStenographer.decode(ImageIO.read(stenFile));
+        } else {
+          stenData = wavStenographer.decode(new WavSampleData(new FileInputStream(stenFile)));
+        }
+      } catch (Exception e) {
         statusLabel.setText("Error reading stenographic file.");
       }
 
@@ -190,7 +198,7 @@ public class StenographyDemo implements ActionListener {
         outStream = new FileOutputStream(outFile);
         outStream.write(decoded, 0, stenData.plainLen);
         outStream.close();
-        System.out.println("Plaintext saved!");
+        statusLabel.setText("Plaintext saved!");
       } catch (FileNotFoundException e) {
         statusLabel.setText("Error writing plaintext file.");
       } catch (IOException e) {
@@ -215,7 +223,11 @@ public class StenographyDemo implements ActionListener {
         } else if (fileChooserState.equals("ChoosingMask")) {
           File file = fileChooser.getSelectedFile();
           try {
-            mask = ImageIO.read(file);
+            if (isUsingImageMask()) {
+              imageMask = ImageIO.read(file);
+            } else {
+              wavMask = new WavSampleData(new FileInputStream(file));
+            }
             validate();
 
           } catch (IOException e) {
@@ -232,9 +244,14 @@ public class StenographyDemo implements ActionListener {
           byte[] encoded = cipher.encrypt(source);
 
           try {
-            PNGStenographer.encode(new StenData(encoded, source.length), mask, outputFile);
-            System.out.println("Stenographic image saved!");
-          } catch (IOException e) {
+            if (isUsingImageMask()) {
+              pngStenographer.encode(new StenData(encoded, source.length), imageMask, outputFile);
+            } else {
+              wavStenographer.encode(new StenData(encoded, source.length), wavMask, outputFile);
+            }
+            
+            statusLabel.setText("Stenographic file saved!");
+          } catch (Exception e) {
             statusLabel.setText("Error saving file.");
           }
         }
