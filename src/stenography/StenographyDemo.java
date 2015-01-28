@@ -235,7 +235,6 @@ public class StenographyDemo implements ActionListener {
           }
         } else if (fileChooserState.equals("ChoosingSten")) {
           stenFile = fileChooser.getSelectedFile();
-          System.out.println(stenFile);
           followUpFileChooser.showSaveDialog(frame);
         } else if (fileChooserState.equals("ChoosingDest")) {
           File outputFile = fileChooser.getSelectedFile();

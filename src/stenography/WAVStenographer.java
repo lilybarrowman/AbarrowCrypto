@@ -11,7 +11,7 @@ public class WAVStenographer  extends Stenographer<WavSampleData, Exception> {
 
   @Override
   public boolean canSourceHoldData(int numBytes, WavSampleData source) {
-    return (source.getSamplesRemaining() / 4) >= (numBytes + 8);
+    return ((source.getSamplesRemaining() * source.getNumChannels()) / 4) >= (numBytes + 8);
   }
 
   @Override
