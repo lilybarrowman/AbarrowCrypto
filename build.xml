@@ -10,6 +10,7 @@
             </manifest>
             <fileset dir="bin"/>
             <zipfileset excludes="META-INF/*.SF" src="../3rd Party/commons-lang-2.6/commons-lang-2.6.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="../3rd Party/wavtools.jar"/>
         </jar>
     </target>
 </project>
