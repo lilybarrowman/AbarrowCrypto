@@ -74,18 +74,13 @@ public class DES extends AsymmetricBlockCipher {
       27, 20, 13, 2, 41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48, 44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32 };
 
   public static final int[] LEFT_SHIFTS = new int[] { 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 };
-
-  private byte[] premutated;
-
-  private byte[][] subKeys;
-
-  private byte[] B;
   
-  private byte[] thirtyTwoBits;
-  
-  private byte[] singleton;
-  
+  private long[] subKeys;
+    
   private byte[] temp;
+  
+  private byte[] premutated;
+  
 
   public DES(byte[] key) {
     this(key, PairityBitType.NONE);
@@ -98,14 +93,12 @@ public class DES extends AsymmetricBlockCipher {
     }
 
     premutated = new byte[DES.BLOCK_BYTES];
-    subKeys = new byte[DES.ROUNDS][6];
-    B = new byte[6];
-    thirtyTwoBits = new byte[4];
-    singleton = new byte[1];
+    subKeys = new long[DES.ROUNDS];
     temp = new byte[DES.BLOCK_BYTES];
     
     byte[] swap;
-
+    byte[] fortyEightBits = new byte[6];
+    byte[] thirtyTwoBits = new byte[4];
     byte[] leftKey = CryptoUtils.permuteByteArrayByBit(key, -1, new byte[4], DES.PC_1_L);
     byte[] rightKey = CryptoUtils.permuteByteArrayByBit(key, -1, new byte[4], DES.PC_1_R);
 
@@ -125,7 +118,11 @@ public class DES extends AsymmetricBlockCipher {
           .copyBitsFromByteArray(leftKey, 0, 28, premutated, 0);
       CryptoUtils.copyBitsFromByteArray(rightKey, 0, 28, premutated,
           28);
-      CryptoUtils.permuteByteArrayByBit(premutated, -1, subKeys[n], DES.PC_2);
+      
+      CryptoUtils.permuteByteArrayByBit(premutated, -1, fortyEightBits, DES.PC_2);
+      subKeys[n] = CryptoUtils.safeLongFromBytes(fortyEightBits, 0);
+      
+      
       Arrays.fill(premutated, CryptoUtils.ZERO_BYTE);
     }
     
@@ -137,68 +134,27 @@ public class DES extends AsymmetricBlockCipher {
     return DES.BLOCK_BYTES;
   }
 
-  private byte S(int B, int n) {
+  private int S(int B, int n) {
     //B is 6 bits
     int row = ((B >>> 4) & 0x2) + (B & 0x1); // first bit of B followed by the last bit of B
     int column = (B >>> 1) & 0xf; //the middle 4 bits of B
-    //System.out.println("S_"+n +" Row " + row + " Column " + column);
-    return (byte) DES.S_N[n - 1][row * 16 + column];
+    return DES.S_N[n - 1][row * 16 + column];
   }
 
-  private byte[] E(byte[] R) {
-    return CryptoUtils.permuteByteArrayByBit(R, -1, new byte[6], DES.E_CONSTANTS);
-  }
+  private int f(int R, long K) {
+    long B = K ^ CryptoUtils.permuteIntByBitToLong(R, -1, DES.E_CONSTANTS);
+    int preP = 0;
 
-  private byte[] P(byte[] L) {
-    return CryptoUtils.permuteByteArrayByBit(L, -1, new byte[4], DES.P_CONSTANTS);
-  }
-
-  private int f(int R, byte[] K) {
-    byte[] RBytes = CryptoUtils.intToBytes(R, thirtyTwoBits, 0);
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(RBytes));
-    
-    byte[] EBytes = E(RBytes);
-    //so far EBytes seem good
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(EBytes));
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(K));
-    
-    B = CryptoUtils.xorByteArrays(K, EBytes);
-    //so far B seems good so long as K is good
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(B));
-
-    Arrays.fill(thirtyTwoBits, CryptoUtils.ZERO_BYTE);
-
-    Arrays.fill(singleton, CryptoUtils.ZERO_BYTE);
-
-    for (int i = 1; i <= 8; i++) {
-      //singleton is now 6 bits of B
-      CryptoUtils.copyBitsFromByteArray(B, 6 * (i - 1), 6, singleton, 2);
-      //System.out.println(CryptoUtils.byteArrayToBinaryString(singleton).substring(2));
-      
-      singleton[0] = (byte) (S(singleton[0], i) << 4);
-      //S seems to be good but some of the values in the arrays might be corrupt
-      //singleton is now the result of those 6 bits going through the S bucket
-      //the singletones are coming out properly formated
-      //System.out.println(CryptoUtils.byteArrayToBinaryString(singleton).substring(0, 4));
-      CryptoUtils.copyBitsFromByteArray(singleton, 0, 4, thirtyTwoBits, 4 * (i - 1));
-      
-      Arrays.fill(singleton, CryptoUtils.ZERO_BYTE);
+    for (int i = 1; i <= 8; i++) {           
+      //get six bits from B
+      int sixFromB = (int) (B >>> (64 - 6*i));
+      //send them through an s bucket and add them to preP
+      preP += S((int) (B >>> (64 - 6*i)), i) << (32 - (4 * i));
     }
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(thirtyTwoBits));
-    //thirtyTwoBits seems good if the singletons are good
-
-    Arrays.fill(singleton, CryptoUtils.ZERO_BYTE);
-    
-    Arrays.fill(B, CryptoUtils.ZERO_BYTE);
-    
-    byte[] PBytes = P(thirtyTwoBits);
-
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(PBytes));
-    int res = CryptoUtils.intFromBytes(PBytes, 0);
-    
-    Arrays.fill(thirtyTwoBits, CryptoUtils.ZERO_BYTE);
-    
-    return res;
+                    
+    int postP = CryptoUtils.permuteIntByBit(preP, -1, DES.P_CONSTANTS);
+        
+    return postP;
   }
 
   @Override
@@ -229,7 +185,6 @@ public class DES extends AsymmetricBlockCipher {
     int oldL;
 
     for (int i = 1; i <= DES.ROUNDS; i++) {
-      //System.out.println(i + " " + L + " " + R);
       oldL = L;
       L = R;
       // replace with the proper key
@@ -252,7 +207,6 @@ public class DES extends AsymmetricBlockCipher {
       R = L;
       // replace with the proper key
       L = oldR ^ f(L, subKeys[i - 1]);
-      //System.out.println(i + " " + L + " " + R);
     }
 
     lRef.setValue(R);

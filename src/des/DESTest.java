@@ -39,7 +39,6 @@ public class DESTest {
     assertEquals(original, new String(decrypted).replace("\0", ""));
     
     
-    byte[] orig = new byte[]{0, 0, 0, 0, 0, 0, 0, 0};
     encrypted = new DES(new byte[]{(byte) 0x80, 0, 0, 0, 0, 0, 0, 0}, PairityBitType.NONE).encrypt(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
     decrypted = new DES(new byte[]{(byte) 0x80, 0, 0, 0, 0, 0, 0, 0}, PairityBitType.NONE).decrypt(encrypted);
     assertEquals(CryptoUtils.byteArrayToHexString(encrypted), "95a8d72813daa94d");

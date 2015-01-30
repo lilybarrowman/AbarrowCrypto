@@ -28,6 +28,14 @@ public class CryptoUtilsTest {
   }
 
   @Test
+  public void testPermuteIntByBit() {
+    int start = 0xf0;
+    int[] permutation = new int[] { 31, 24, 31, 25, 31, 26, 31, 27 };
+    int out = CryptoUtils.permuteIntByBit(start, 0, permutation);
+    assertEquals(0x55000000, out);
+  }
+  
+  @Test
   public void testCopyBitsFromByteArray() {
 
     assertArrayEquals(CryptoUtils.copyBitsFromByteArray(new byte[] {

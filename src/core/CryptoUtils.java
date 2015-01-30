@@ -181,6 +181,23 @@ public class CryptoUtils {
         + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24) + ((bytes[start + 5] & 0xffL) << 16)
         + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
   }
+  
+  
+  public static long safeLongFromBytes(byte[] bytes, int start) {
+    long output = 0;
+    
+    int index = start;
+    
+    int shift = 56;
+    
+    while((bytes.length > index) && (shift >= 0)) {
+      output +=(bytes[index] & 0xffL) << shift;
+      index++;
+      shift -= 8;
+    }
+    
+    return output;
+  }
 
   public static byte[] intArrayToByteArray(int[] ints) {
     return intArrayToByteArray(ints, false);
@@ -345,6 +362,26 @@ public class CryptoUtils {
     return output;
   }
   
+  public static int permuteIntByBit(int input, int srcPos, int[] permutation) {
+    int output = 0;
+    for(int n = 0; n < permutation.length; n ++) {
+      output += ((input >>> (31-permutation[n]-srcPos)) & 0x1) << (31 - n);
+    }
+    return output;
+  }
+  
+  
+  public static long permuteIntByBitToLong(int input, int srcPos, int[] permutation) {
+    long inputAsLong = input;
+    long output = 0;
+    for(int n = 0; n < permutation.length; n ++) {
+      int leftShift = 31-permutation[n]-srcPos;
+      long leftShifted = inputAsLong >> leftShift;
+      long leftShiftedAndOne = leftShifted & 0x1;
+      output += ((inputAsLong >>> (31-permutation[n]-srcPos)) & 0x1) << (63 - n);
+    }
+    return output;
+  }
 
   public static byte[] copyBitsFromByteArray(byte[] input, int startingSrcBit, int bitLength, byte[] output,
       int startingDestBit) {
