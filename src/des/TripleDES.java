@@ -31,7 +31,7 @@ public class TripleDES extends AsymmetricBlockCipher {
   }
 
   @Override
-  protected int getBlockBytes() {
+  public int getBlockBytes() {
     return 8;
   }
 

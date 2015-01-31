@@ -2,7 +2,7 @@ package core;
 
 public abstract class AsymmetricBlockCipher {
   
-  protected abstract int getBlockBytes();
+  public abstract int getBlockBytes();
   
   public abstract void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos);
   

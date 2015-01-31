@@ -273,7 +273,7 @@ public class BlowfishCipher extends AsymmetricBlockCipher {
   }
 
   @Override
-  protected int getBlockBytes() {
+  public int getBlockBytes() {
     return BLOCK_BYTES;
   }
 

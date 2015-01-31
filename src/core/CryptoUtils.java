@@ -49,6 +49,14 @@ public class CryptoUtils {
       // [8] 1111 1111
       0xff };
 
+  public static int swapEndianness(int x) {
+    return CryptoUtils.intFromBytes(CryptoUtils.intToBytes(x, new byte[4], 0, false), 0, true);
+  }
+  
+  public static int[] swapEndianness(int[] ints) {
+    return CryptoUtils.intArrayFromBytes(CryptoUtils.intArrayToByteArray(ints, false), 0, 4 * ints.length, true);
+  }
+  
   public static int rotateIntLeft(int x, int digits) {
     return (x << digits) | (x >>> (32 - digits));
   }

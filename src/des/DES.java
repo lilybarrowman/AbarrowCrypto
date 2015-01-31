@@ -130,7 +130,7 @@ public class DES extends AsymmetricBlockCipher {
   }
 
   @Override
-  protected int getBlockBytes() {
+  public int getBlockBytes() {
     return DES.BLOCK_BYTES;
   }
 
@@ -147,13 +147,11 @@ public class DES extends AsymmetricBlockCipher {
 
     for (int i = 1; i <= 8; i++) {           
       //get six bits from B
-      int sixFromB = (int) (B >>> (64 - 6*i));
       //send them through an s bucket and add them to preP
       preP += S((int) (B >>> (64 - 6*i)), i) << (32 - (4 * i));
     }
                     
     int postP = CryptoUtils.permuteIntByBit(preP, -1, DES.P_CONSTANTS);
-        
     return postP;
   }
 

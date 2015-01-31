@@ -5,10 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.commons.lang.ArrayUtils;
 
 import des.DES;
 import des.TripleDES;
+import aes.AES;
 import blowfish.Bcrypt;
 import blowfish.BlowfishCipher;
 import md.MD5;
@@ -55,7 +58,11 @@ public class Main {
     System.out.println(CryptoUtils.byteArrayToHexString(out));
 
     System.out.println(CryptoUtils.byteArrayToHexString(
-        new TripleDES("AllYourPasswordsAreWayTooShort".getBytes(), PairityBitType.NONE).encrypt("This is a super secret and secure message!".getBytes())));*/
+        new TripleDES("AllYourPasswordsAreWayTooShort".getBytes(), PairityBitType.NONE).encrypt("This is a super secret and secure message!".getBytes())));
+    
+    System.out.println(CryptoUtils.byteArrayToHexString(new AES(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).encrypt(DatatypeConverter
+        .parseHexBinary("00112233445566778899aabbccddeeff"))));*/
     
     /*boolean useFasterRandom = true;
     RandomVisualizer.start(useFasterRandom ? new HasherRandom() : new HasherRandom(new Bcrypt("123456890123456".getBytes(), 4),
