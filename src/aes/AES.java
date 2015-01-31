@@ -48,9 +48,6 @@ public class AES extends AsymmetricBlockCipher {
   private int[] state;
 
   public AES(byte[] aesKey) {
-    // 128 bit 16 byte 4 word
-    // 192 bit 24 byte 6 word
-    // 256 bit 32 byte 8 word
     numberOfRounds = getNumberOfRounds(aesKey.length);
     state = new int[AES.STATE_COLUMNS];
     roundKeys = expandRoundKeys(aesKey);
@@ -73,17 +70,7 @@ public class AES extends AsymmetricBlockCipher {
     
     int keyBytes = aesKey.length;
     
-    int rounds;
-    
-    if (keyBytes == 16) {
-      rounds = 10;
-    } else if (keyBytes == 24) {
-      rounds = 12;
-    } else if (keyBytes == 32) {
-      rounds = 14;
-    } else {
-      throw new IllegalArgumentException("The supplied key is not a valid length;");
-    }
+    int rounds = getNumberOfRounds(keyBytes);
 
     int intsInKey = keyBytes / 4;
 
