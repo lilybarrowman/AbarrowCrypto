@@ -199,8 +199,7 @@ public class AES extends AsymmetricBlockCipher {
         j++;
       }
       // 1 << j is the most significant bit
-      out ^= (1 << j) + Math.max(1 << (j - 4), 0) + Math.max(1 << (j - 5), 0) + Math.max(1 << (j - 7), 0)
-          + Math.max(1 << (j - 8), 0);
+      out ^= (1 << j) + (1 << (j - 4)) + (1 << (j - 5)) + (1 << (j - 7)) + (1 << (j - 8));
       count++;
     }
     return out;
