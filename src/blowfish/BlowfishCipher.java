@@ -16,6 +16,8 @@ public class BlowfishCipher extends AsymmetricBlockCipher {
   private static final int S_SUB_SIZE = 256;
 
   private static final int ROUNDS = 16;
+  
+  private static final int[] KEY_LENGTHS = CryptoUtils.integerRange(4, 56);
 
   private static final int[] INITIA_S0 = { 0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96,
       0xba7c9045, 0xf12c7f99, 0x24a19947, 0xb3916cf7, 0x0801f2e2, 0x858efc16, 0x636920d8, 0x71574e69, 0xa458fea3,
@@ -275,6 +277,11 @@ public class BlowfishCipher extends AsymmetricBlockCipher {
   @Override
   public int getBlockBytes() {
     return BLOCK_BYTES;
+  }
+
+  @Override
+  public int[] getValidKeyLengths() {
+    return BlowfishCipher.KEY_LENGTHS;
   }
 
 }

@@ -1,8 +1,10 @@
 package core;
 
-public abstract class AsymmetricBlockCipher {
+public abstract class AsymmetricBlockCipher implements Cipher {
   
   public abstract int getBlockBytes();
+  
+  public abstract int[] getValidKeyLengths();
   
   public abstract void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos);
   

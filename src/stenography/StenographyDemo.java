@@ -13,11 +13,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -26,6 +31,8 @@ import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 
 import wavtools.WavSampleData;
+import core.Cipher;
+import core.CipherMaker;
 import core.CryptoUtils;
 import des.TripleDES;
 
@@ -53,6 +60,12 @@ public class StenographyDemo implements ActionListener {
   private ButtonGroup maskTypeGroup;
   private JRadioButton imageMaskButton;
   private JRadioButton wavMaskButton;
+  
+  private JCheckBox trippleDesCheckBox;
+  private JCheckBox aesCheckBox;
+
+  private TreeMap<JCheckBox, CipherMaker> ciphers;
+  private List<JCheckBox> cipherCheckBoxOrder;
   
   private PNGStenographer pngStenographer;
   private WAVStenographer wavStenographer;
@@ -86,15 +99,34 @@ public class StenographyDemo implements ActionListener {
     maskTypeGroup.add(imageMaskButton);
     maskTypeGroup.add(wavMaskButton);
     maskTypeGroup.setSelected(imageMaskButton.getModel(), true);
-
+    
+    trippleDesCheckBox = new JCheckBox("3DES", true);
+    aesCheckBox = new JCheckBox("AES", false);
+    
+    
+    cipherCheckBoxOrder = new ArrayList<JCheckBox>();
+    
+    ciphers = new TreeMap<JCheckBox, CipherMaker>(new Comparator<JCheckBox>(){
+      @Override
+      public int compare(JCheckBox a, JCheckBox b) {
+        return (cipherCheckBoxOrder.indexOf(a) > cipherCheckBoxOrder.indexOf(b)) ? 1 : -1;
+      }
+    });
+    
     Container contents = frame.getContentPane();
     contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
 
     contents.add(new JLabel("Password"));
     passwordInput.setPreferredSize(new Dimension(200, 20));
     contents.add(passwordInput);
+    
     contents.add(imageMaskButton);
     contents.add(wavMaskButton);
+    
+    contents.add(trippleDesCheckBox);
+    //contents.add(aesCheckBox);
+
+    
     contents.add(selectSourceButton);
     contents.add(selectMaskButton);
     contents.add(statusLabel);
@@ -113,6 +145,9 @@ public class StenographyDemo implements ActionListener {
     followUpFileChooser.addActionListener(this);
     imageMaskButton.addActionListener(this);
     wavMaskButton.addActionListener(this);
+    trippleDesCheckBox.addActionListener(this);
+    aesCheckBox.addActionListener(this);
+    
     
     pngStenographer = new PNGStenographer();
     wavStenographer = new WAVStenographer();
@@ -125,7 +160,9 @@ public class StenographyDemo implements ActionListener {
   public boolean validate() {
 
     String problems = "";
-    if (source == null) {
+    if (!isEncryptionAlgorithmSelected()) {
+      problems = "Select an encryption algorithm.";
+    } else  if (source == null) {
       problems = "Select a source.";
     } else{
       if (isUsingImageMask()) {
@@ -142,10 +179,15 @@ public class StenographyDemo implements ActionListener {
         }
       }
     }
+    
     statusLabel.setText(problems);
     boolean validated = (problems.length() == 0);
     saveButton.setEnabled(validated);
     return validated;
+  }
+  
+  private boolean isEncryptionAlgorithmSelected() {
+    return aesCheckBox.isSelected() || trippleDesCheckBox.isSelected();
   }
 
   public static void start() {
@@ -154,14 +196,16 @@ public class StenographyDemo implements ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent event) {
-    if (event.getSource() == imageMaskButton) {
-      validate();
-    } else if (event.getSource() == wavMaskButton) {
+    
+    if ((event.getSource() == imageMaskButton) || (event.getSource() == wavMaskButton)
+        || (event.getSource() == trippleDesCheckBox) || (event.getSource() == aesCheckBox)) {
       validate();
     } else if (event.getSource() == openButton) {
-      fileChooserState = "ChoosingSten";
-      fileChooser.setFileFilter(isUsingImageMask() ? pngFileFilter : wavFileFilter);
-      fileChooser.showOpenDialog(frame);
+      if (isEncryptionAlgorithmSelected()) {
+        fileChooserState = "ChoosingSten";
+        fileChooser.setFileFilter(isUsingImageMask() ? pngFileFilter : wavFileFilter);
+        fileChooser.showOpenDialog(frame);
+      }
     } else if (event.getSource() == saveButton) {
       fileChooserState = "ChoosingDest";
       fileChooser.setFileFilter(isUsingImageMask() ? pngFileFilter : wavFileFilter);

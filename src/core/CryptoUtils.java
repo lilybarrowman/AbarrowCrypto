@@ -125,6 +125,10 @@ public class CryptoUtils {
       ints[i] ^= val;
     }
   }
+  
+  public static byte[] intToBytes(int val, boolean isLittleEndian) {
+    return intToBytes(val, new byte[4], 0, isLittleEndian);
+  }
 
   public static byte[] intToBytes(int val, byte[] bytes, int start, boolean isLittleEndian) {
     if (isLittleEndian) {
@@ -141,12 +145,12 @@ public class CryptoUtils {
     return bytes;
   }
 
-  public static int[] intArrayFromBytes(byte[] bytes, int start, int length) {
-    return intArrayFromBytes(bytes, start, length, false);
+  public static int[] intArrayFromBytes(byte[] bytes, int start, int byteLength) {
+    return intArrayFromBytes(bytes, start, byteLength, false);
   }
 
-  public static int[] intArrayFromBytes(byte[] bytes, int start, int length, boolean isLittleEndian) {
-    int[] result = new int[length / 4];
+  public static int[] intArrayFromBytes(byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
+    int[] result = new int[byteLength / 4];
 
     for (int i = 0; i < result.length; i++) {
       result[i] = CryptoUtils.intFromBytes(bytes, start + i * 4, isLittleEndian);
@@ -450,6 +454,39 @@ public class CryptoUtils {
     } else {
       return src << (-digitsToShiftRightIsPositive);
     }
+  }
+  
+  public static int[] integerRange(int start, int end) {
+    if( end < start) {
+      throw new IllegalArgumentException("The end is less then the start!");
+    }
+    int[] values = new int[]{end-start+1};
+    for (int i = 0; i < values.length; i++) {
+      values[i] = start + i;
+    }
+    return values;
+  }
+  
+  public static int multiplyFiniteFieldBytes(int a, int b, int irreduciblePolynomial) {
+    int out = 0;
+    for (int n = 7; n >= 0; n--) {
+      out ^= (b & (1 << n)) * a;
+    }
+
+    // polynomial long division in this absurd world
+    int count = 0;
+    while (out >= 256 && count < 100) {
+      int c = out;
+      int j = -1;
+      while (c > 0) {
+        c = c >>> 1;
+        j++;
+      }
+      // 1 << j is the most significant bit
+      out ^= (irreduciblePolynomial << (j - 8));
+      count++;
+    }
+    return out;
   }
 
 }

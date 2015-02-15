@@ -10,6 +10,8 @@ import core.PairityBitType;
 
 public class TripleDES extends AsymmetricBlockCipher {
   
+  private static final int[] KEY_LENGTHS = new int[] {24};
+  
   private DES des1;
   private DES des2;
   private DES des3;
@@ -51,6 +53,11 @@ public class TripleDES extends AsymmetricBlockCipher {
     Arrays.fill(temp1, CryptoUtils.ZERO_BYTE);
     des1.decryptBlock(temp2, 0, output, destPos);
     Arrays.fill(temp2, CryptoUtils.ZERO_BYTE);
+  }
+
+  @Override
+  public int[] getValidKeyLengths() {
+    return TripleDES.KEY_LENGTHS;
   }
 
 }
