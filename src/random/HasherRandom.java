@@ -3,7 +3,7 @@ package random;
 import java.util.Arrays;
 import java.util.Random;
 
-import sha.SHA512;
+import sha.SHA2_512;
 import core.CryptoUtils;
 import core.Hasher;
 
@@ -29,15 +29,15 @@ public class HasherRandom extends Random {
   private byte[] intBytes;
   
   public HasherRandom() {
-    this(new SHA512(), null);
+    this(new SHA2_512(), null);
   }
   
   public HasherRandom(byte[] cryptoKey) {
-    this(new SHA512(), cryptoKey);
+    this(new SHA2_512(), cryptoKey);
   }
   
   public HasherRandom(long seed) {
-    this(new SHA512(), CryptoUtils.longToBytes(seed, new byte[8], 0));
+    this(new SHA2_512(), CryptoUtils.longToBytes(seed, new byte[8], 0));
   }
   
   public HasherRandom(Hasher hashMaker, byte[] cryptoKey) {    

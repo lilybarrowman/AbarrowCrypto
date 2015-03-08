@@ -111,6 +111,9 @@ public class Bcrypt extends Hasher {
 
   @Override
   public Hasher reset() {
+    if (bytesToHash != null) {
+      CryptoUtils.fillWithZeroes(bytesToHash);
+    }
     bytesToHash = new byte[]{};
     return this;
   }
@@ -170,5 +173,10 @@ public class Bcrypt extends Hasher {
      
     return new Bcrypt(salt, cost, isUsingV2Y).addBytes(password.getBytes()).computeHashString().equals(hash);
     
+  }
+
+
+  @Override
+  protected void hashBlock(byte[] data, int index) {    
   }
 }

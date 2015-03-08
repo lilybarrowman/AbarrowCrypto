@@ -7,10 +7,10 @@ import org.apache.commons.lang.ArrayUtils;
 import core.Hasher;
 import core.CryptoUtils;
 
-public class SHA512 extends Hasher {
+public class SHA2_512 extends Hasher {
   
   private static final int BLOCK_BITS = 1024;
-  private static final int BLOCK_BYTES = SHA512.BLOCK_BITS / 8;
+  private static final int BLOCK_BYTES = SHA2_512.BLOCK_BITS / 8;
   private static final int MIN_PADDING_BYTES = 17;
 
   private static final long[] INITIAL_HASHES = new long[] { 0x6a09e667f3bcc908L, 0xbb67ae8584caa73bL,
@@ -40,11 +40,7 @@ public class SHA512 extends Hasher {
   
   private long[] W;
   
-  private byte[] toHash;
-  
-  private long totalLength;
-  
-  public SHA512() {
+  public SHA2_512() {
     reset();
   }
   
@@ -60,7 +56,7 @@ public class SHA512 extends Hasher {
     
     int i;
     
-    for (i = 0; i + SHA512.BLOCK_BYTES <= toHash.length; i += SHA512.BLOCK_BYTES) {
+    for (i = 0; i + SHA2_512.BLOCK_BYTES <= toHash.length; i += SHA2_512.BLOCK_BYTES) {
       hashBlock(toHash, i);
     }
         
@@ -73,14 +69,14 @@ public class SHA512 extends Hasher {
 
   @Override
   public byte[] computeHash() {
-    byte[] padded = new byte[SHA512.BLOCK_BYTES];
+    byte[] padded = new byte[SHA2_512.BLOCK_BYTES];
     int copiedLength = toHash.length;
     
     if (copiedLength == 0) {
       fillPadding(padded, 0);
       hashBlock(padded, 0);
       
-    } else if ((SHA512.BLOCK_BYTES - copiedLength) < SHA512.MIN_PADDING_BYTES) {
+    } else if ((SHA2_512.BLOCK_BYTES - copiedLength) < SHA2_512.MIN_PADDING_BYTES) {
       System.arraycopy(toHash, 0, padded, 0, copiedLength);
       padded[copiedLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
       hashBlock(padded, 0);
@@ -106,7 +102,7 @@ public class SHA512 extends Hasher {
     CryptoUtils.longToBytes(totalLength * 8L, padded, padded.length - 8);
   }
   
-  private void hashBlock(byte[] bytes, int start) {
+  protected void hashBlock(byte[] bytes, int start) {
     long a = hash[0];
     long b = hash[1];
     long c = hash[2];
@@ -148,24 +144,25 @@ public class SHA512 extends Hasher {
 
   @Override
   public Hasher reset() {
+    super.reset();
     if (hash == null) {
-      hash = Arrays.copyOf(SHA512.INITIAL_HASHES, 8);
+      hash = Arrays.copyOf(SHA2_512.INITIAL_HASHES, 8);
     } else {
-      System.arraycopy(SHA512.INITIAL_HASHES, 0, hash, 0, 8);
+      System.arraycopy(SHA2_512.INITIAL_HASHES, 0, hash, 0, 8);
     }
     
     if (W == null) {
       W = new long[80];
+    } else {
+      CryptoUtils.fillWithZeroes(W);
     }
-    toHash = new byte[0];
-    totalLength = 0;
     
     return this;
   }
 
   @Override
   public int getBlockBytes() {
-    return SHA512.BLOCK_BYTES;
+    return SHA2_512.BLOCK_BYTES;
   }
 
   @Override

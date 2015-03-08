@@ -1,9 +1,6 @@
 package md;
 
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import core.Hasher;
 import core.CryptoUtils;
 
@@ -43,20 +40,16 @@ public class MD5 extends Hasher {
   private static final int BLOCK_BYTES = MD5.BLOCK_BITS / 8;
   private static final int MIN_PADDING_BYTES = 9;
   
-  private byte[] toHash;
-  
   private int[] hash;
   
   private int[] M;
-  
-  private long totalLength;
-  
+    
 
   public MD5() {
     reset();
   }
 
-  @Override
+  /*@Override
   public Hasher addBytes(byte[] bytes) {
     if (bytes == null) {
       throw new IllegalArgumentException("SHA1 cannot hash a null array.");
@@ -77,7 +70,7 @@ public class MD5 extends Hasher {
     }
     
     return this;
-  }
+  }*/
 
   @Override
   public byte[] computeHash() {
@@ -115,7 +108,7 @@ public class MD5 extends Hasher {
     CryptoUtils.longToBytes(totalLength * 8L, padded, padded.length - 8, true);
   }
   
-  private void hashBlock(byte[] bytes, int start) {
+  protected void hashBlock(byte[] bytes, int start) {
     int A = hash[0];
     int B = hash[1];
     int C = hash[2];
@@ -155,9 +148,8 @@ public class MD5 extends Hasher {
 
   @Override
   public Hasher reset() {
+    super.reset();
     hash = Arrays.copyOf(MD5.INITIAL_HASHES, 4);
-    toHash = new byte[0];
-    totalLength = 0;
     M = new int[16];
     return this;
   }

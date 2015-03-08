@@ -21,7 +21,7 @@ import random.RandomVisualizer;
 import random.RandomSymmetricStreamCipher;
 import rc4.RC4Random;
 import sha.SHA1;
-import sha.SHA512;
+import sha.SHA2_512;
 import stenography.StenographyDemo;
 import wavtools.ArraySampleData;
 import wavtools.WavSampleData;

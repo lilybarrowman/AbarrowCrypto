@@ -19,37 +19,8 @@ public class SHA1 extends Hasher {
   private int[] hash;
   private int[] W;
   
-  private byte[] toHash;
-  
-  private long totalLength;
-  
-  
   public SHA1(){
     reset();
-  }
-
-  @Override
-  public Hasher addBytes(byte[] bytes) {
-    
-    if (bytes == null) {
-      throw new IllegalArgumentException("SHA1 cannot hash a null array.");
-    }
-    
-    totalLength += bytes.length;
-    
-    toHash = ArrayUtils.addAll(toHash, bytes);
-    
-    int i;
-    
-    for (i = 0; i + SHA1.BLOCK_BYTES <= toHash.length; i += SHA1.BLOCK_BYTES) {
-      hashBlock(toHash, i);
-    }
-        
-    if (i > 0 ) {
-      toHash = ArrayUtils.subarray(toHash, i, toHash.length);
-    }
-    
-    return this;
   }
 
   @Override
@@ -87,7 +58,7 @@ public class SHA1 extends Hasher {
     CryptoUtils.longToBytes(totalLength * 8L, padded, padded.length - 8);
   }
   
-  private void hashBlock(byte[] bytes, int start) {
+  protected void hashBlock(byte[] bytes, int start) {
     int a = hash[0];
     int b = hash[1];
     int c = hash[2];
@@ -131,10 +102,13 @@ public class SHA1 extends Hasher {
 
   @Override
   public Hasher reset() {
+    super.reset();
     hash = Arrays.copyOf(SHA1.INITIAL_HASHES, 5);
-    W = new int[80];
-    toHash = new byte[0];
-    totalLength = 0;
+    if (W==null) {
+      W = new int[80];
+    } else {
+      CryptoUtils.fillWithZeroes(W);
+    }
     return this;
   }
   

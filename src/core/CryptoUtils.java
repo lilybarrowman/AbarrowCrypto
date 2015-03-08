@@ -8,6 +8,8 @@ public class CryptoUtils {
 
   public static final byte ONE_AND_SEVEN_ZEROES_BYTE = (byte) 0x80;
   public static final byte ZERO_BYTE = (byte) 0;
+  public static final byte ONE_BYTE = (byte) 1;
+
 
   private static int[] LAST_N_BITS = new int[] {
       // [0] 0000 0000
@@ -48,9 +50,31 @@ public class CryptoUtils {
       0xfe,
       // [8] 1111 1111
       0xff };
+  
+  public static void fillWithZeroes(byte[] data) {
+    for (int n = 0; n < data.length; n++) {
+      data[n] = CryptoUtils.ZERO_BYTE;
+    }
+  }
+  
+  public static void fillWithZeroes(long[] data) {
+    for (int n = 0; n < data.length; n++) {
+      data[n] = 0;
+    }
+  }
+  
+  public static void fillWithZeroes(int[] data) {
+    for (int n = 0; n < data.length; n++) {
+      data[n] = 0;
+    }
+  }
 
   public static int swapEndianness(int x) {
     return CryptoUtils.intFromBytes(CryptoUtils.intToBytes(x, new byte[4], 0, false), 0, true);
+  }
+  
+  public static long swapEndianness(long x) {
+    return CryptoUtils.longFromBytes(CryptoUtils.longToBytes(x, new byte[8], 0, false), 0, true);
   }
   
   public static int[] swapEndianness(int[] ints) {
@@ -78,7 +102,7 @@ public class CryptoUtils {
     return bytes;
   }
 
-  public static void longToBytes(long val, byte[] bytes, int start, boolean isLittleEndian) {
+  public static byte[] longToBytes(long val, byte[] bytes, int start, boolean isLittleEndian) {
     if (isLittleEndian) {
       bytes[start + 7] = (byte) ((val >>> 56) & 0xff);
       bytes[start + 6] = (byte) ((val >>> 48) & 0xff);
@@ -98,6 +122,7 @@ public class CryptoUtils {
       bytes[start + 6] = (byte) ((val >>> 8) & 0xff);
       bytes[start + 7] = (byte) (val & 0xff);
     }
+    return bytes;
   }
 
   public static byte[] utf16CharArrayToByteAray(char[] input, byte[] output) {
@@ -129,6 +154,10 @@ public class CryptoUtils {
   public static byte[] intToBytes(int val, boolean isLittleEndian) {
     return intToBytes(val, new byte[4], 0, isLittleEndian);
   }
+  
+  public static byte[] longToBytes(long val, boolean isLittleEndian) {
+    return longToBytes(val, new byte[8], 0, isLittleEndian);
+  }
 
   public static byte[] intToBytes(int val, byte[] bytes, int start, boolean isLittleEndian) {
     if (isLittleEndian) {
@@ -150,15 +179,44 @@ public class CryptoUtils {
   }
 
   public static int[] intArrayFromBytes(byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
-    int[] result = new int[byteLength / 4];
+    return intArrayFromBytes(new int[byteLength / 4], 0, bytes, start,  byteLength, isLittleEndian);
+  }
+  
+  public static int[] intArrayFromBytes(int[] result, int offset, byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
 
     for (int i = 0; i < result.length; i++) {
-      result[i] = CryptoUtils.intFromBytes(bytes, start + i * 4, isLittleEndian);
+      result[i + offset] = CryptoUtils.intFromBytes(bytes, start + i * 4, isLittleEndian);
     }
 
     return result;
   }
+  
+  public static long[] longArrayFromBytes(byte[] bytes, int start, int byteLength) {
+    return longArrayFromBytes(bytes, start, byteLength, false);
+  }
 
+  public static long[] longArrayFromBytes(byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
+    return longArrayFromBytes(new long[byteLength / 8], 0, bytes, start,  byteLength / 8, isLittleEndian);
+  }
+  
+  public static long[] longArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart, int resultLength, boolean isLittleEndian) {
+
+    for (int i = 0; i < resultLength; i++) {
+      result[resultStart + i] = CryptoUtils.longFromBytes(bytes, byteStart + i * 8, isLittleEndian);
+    }
+
+    return result;
+  }
+  
+  
+  public static long[] xorLongArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart, int resultLength, boolean isLittleEndian) {
+
+    for (int i = 0; i < resultLength; i++) {
+      result[resultStart + i] ^= CryptoUtils.longFromBytes(bytes, byteStart + i * 8, isLittleEndian);
+    }
+
+    return result;
+  }
   public static int intFromBytes(byte[] bytes, int start) {
     return CryptoUtils.intFromBytes(bytes, start, false);
   }
@@ -189,11 +247,21 @@ public class CryptoUtils {
   }
 
   public static long longFromBytes(byte[] bytes, int start) {
-    return ((bytes[start] & 0xffL) << 56) + ((bytes[start + 1] & 0xffL) << 48) + ((bytes[start + 2] & 0xffL) << 40)
-        + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24) + ((bytes[start + 5] & 0xffL) << 16)
-        + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
+    return longFromBytes(bytes, start, false);
   }
   
+  
+  public static long longFromBytes(byte[] bytes, int start, boolean isLittleEndian) {
+    if (isLittleEndian) {
+      return ((bytes[start + 7] & 0xffL) << 56) + ((bytes[start + 6] & 0xffL) << 48) + ((bytes[start + 5] & 0xffL) << 40)
+          + ((bytes[start + 4] & 0xffL) << 32) + ((bytes[start + 3] & 0xffL) << 24) + ((bytes[start + 2] & 0xffL) << 16)
+          + ((bytes[start + 1] & 0xffL) << 8) + (bytes[start] & 0xffL);
+    } else {
+      return ((bytes[start] & 0xffL) << 56) + ((bytes[start + 1] & 0xffL) << 48) + ((bytes[start + 2] & 0xffL) << 40)
+          + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24) + ((bytes[start + 5] & 0xffL) << 16)
+          + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
+    }
+  }
   
   public static long safeLongFromBytes(byte[] bytes, int start) {
     long output = 0;
@@ -210,23 +278,62 @@ public class CryptoUtils {
     
     return output;
   }
+  
+  public static byte[] safeLongToBytes(long val, byte[] bytes, int start, boolean isLittleEndian) {
+     int index = start;
+    if (isLittleEndian) {
+      int shift = 0;
+      
+      while((bytes.length > index) && (shift <= 56)) {
+        bytes[index] = (byte)((val >> shift) & 0xffL);
+        index++;
+        shift += 8;
+      }
+    } else {
+      int shift = 56;
+     
+      while((bytes.length > index) && (shift >= 0)) {
+        bytes[index] = (byte)((val >> shift) & 0xffL);
+        index++;
+        shift -= 8;
+      }
+    }
+    
+    return bytes;
+  }
 
   public static byte[] intArrayToByteArray(int[] ints) {
     return intArrayToByteArray(ints, false);
   }
 
   public static byte[] intArrayToByteArray(int[] ints, boolean isLittleEndian) {
-    byte[] bytes = new byte[ints.length * 4];
+    return intArrayToByteArray(new byte[ints.length * 4], 0 , ints, isLittleEndian);
+  }
+  public static byte[] intArrayToByteArray(byte[] bytes, int byteStart, int[] ints, boolean isLittleEndian) {
     for (int i = 0; i < ints.length; i++) {
-      intToBytes(ints[i], bytes, i * 4, isLittleEndian);
+      intToBytes(ints[i], bytes, byteStart + i * 4, isLittleEndian);
     }
     return bytes;
   }
 
   public static byte[] longArrayToByteArray(long[] longs) {
-    byte[] bytes = new byte[longs.length * 8];
-    for (int i = 0; i < longs.length; i++) {
-      longToBytes(longs[i], bytes, i * 8);
+    return longArrayToByteArray(longs, false);
+  }
+
+  public static byte[] longArrayToByteArray(long[] longs, boolean isLittleEndian) {
+    return longArrayToByteArray(new byte[longs.length * 8], 0, longs, longs.length, isLittleEndian);
+  }
+  
+  public static byte[] longArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs, boolean isLittleEndian) {
+    for (int i = 0; i < numLongs; i++) {
+      longToBytes(longs[i], bytes, byteStart + i * 8, isLittleEndian);
+    }
+    return bytes;
+  }
+  
+  public static byte[] safeLongArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs, boolean isLittleEndian) {
+    for (int i = 0; i < numLongs; i++) {
+      safeLongToBytes(longs[i], bytes, byteStart + i * 8, isLittleEndian);
     }
     return bytes;
   }
