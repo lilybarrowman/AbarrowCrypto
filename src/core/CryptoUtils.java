@@ -428,18 +428,34 @@ public class CryptoUtils {
     return CryptoUtils.rotateLongRight(x, 19) ^ CryptoUtils.rotateLongRight(x, 61) ^ (x >>> 6);
   }
 
+  
   public static byte[] xorByteArrays(byte[] a, byte[] b) {
-
     if (a.length != b.length) {
       throw new IllegalArgumentException("Cannot xor byte arrays of unequal lenghts.");
     }
-
-    byte[] c = new byte[a.length];
-
-    for (int i = 0; i < a.length; i++) {
-      c[i] = (byte) ((a[i] ^ b[i]) & 0xff);
+    return CryptoUtils.xorByteArrays(a, b, new byte[a.length]);
+  }
+  
+  public static byte[] fillLastBytes(byte[] source, byte[] target, int maxToFill) {
+    
+    int startingByte = source.length - maxToFill;
+    startingByte = (startingByte<0 ) ? 0: startingByte;
+    int bytesToCopy = source.length - startingByte;
+    
+    System.arraycopy(source, startingByte, target, target.length - bytesToCopy, bytesToCopy);
+    
+    return target;
+  }
+  
+  public static byte[] xorByteArrays(byte[] a, byte[] b, byte[] c) {
+    return CryptoUtils.xorByteArrays(a, 0, b, 0, c, 0, a.length);
+  }
+  
+  
+  public static byte[] xorByteArrays(byte[] a, int aStart, byte[] b, int bStart, byte[] c, int cStart, int length) {
+    for (int i = 0; i < length; i++) {
+      c[i + cStart] = (byte) ((a[i + aStart] ^ b[i + bStart]) & 0xff);
     }
-
     return c;
   }
 

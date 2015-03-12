@@ -13,7 +13,7 @@ public abstract class AsymmetricBlockCipher implements Cipher {
   public byte[] encrypt(byte[] input) {
     
     int blockBytes = getBlockBytes();
-    byte[] output = new byte[blockBytes * ((input.length + blockBytes - 1) / blockBytes)];
+    byte[] output = new byte[cipherTextLength(input.length)];
 
     int i;
 
@@ -34,7 +34,7 @@ public abstract class AsymmetricBlockCipher implements Cipher {
   public byte[] decrypt(byte[] input) {
     
     int blockBytes = getBlockBytes();
-    byte[] output = new byte[blockBytes * ((input.length + blockBytes - 1) / blockBytes)];
+    byte[] output = new byte[cipherTextLength(input.length)];
 
     int i;
 
@@ -50,6 +50,11 @@ public abstract class AsymmetricBlockCipher implements Cipher {
     }
         
     return output;
+  }
+  
+  public int cipherTextLength(int plainTextLength) {
+    int blockBytes = getBlockBytes();
+    return blockBytes * ((plainTextLength + blockBytes - 1) / blockBytes);
   }
 
 }

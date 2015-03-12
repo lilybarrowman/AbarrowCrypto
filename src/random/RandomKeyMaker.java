@@ -6,9 +6,7 @@ public class RandomKeyMaker {
   
   public static byte[] makeKey(int length) {
     byte[] key = new byte[Math.max(8, length)];
-    
-    //TODO: Make the default key more secure
-    
+        
     //time 
     CryptoUtils.longToBytes(System.nanoTime(), key, 0);
     

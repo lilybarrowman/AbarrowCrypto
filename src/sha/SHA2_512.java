@@ -74,12 +74,7 @@ public class SHA2_512 extends Hasher {
   }
   
   private void appendWithLength(byte[] padded) {
-    
-    byte[] hashBitLength = totalLength.multiply(BigInteger.valueOf(8)).toByteArray();
-    
-    for (int n = 0; (n < 16) && (n < hashBitLength.length);n++) {
-      padded[padded.length - 1 - n] = hashBitLength[hashBitLength.length - 1 - n];
-    }
+    CryptoUtils.fillLastBytes(totalLength.multiply(BigInteger.valueOf(8)).toByteArray(), padded, 16);
   }
   
   protected void hashBlock(byte[] bytes, int start) {

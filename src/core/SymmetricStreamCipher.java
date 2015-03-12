@@ -1,20 +1,22 @@
 package core;
 
-public abstract class SymmetricStreamCipher {
+public abstract class SymmetricStreamCipher implements Cipher {
   
   
-  public byte[] codec(byte[] input) {
-    return codec(input, 0, input.length);
+  public abstract byte[] codec(byte[] input);
+  
+  @Override
+  public final byte[] decrypt(byte[] input) {
+    return this.codec(input);
   }
-
-  public abstract byte[] codec(byte[] input, int startPos, int bytesToCode);
   
-  
-  public String codec(String inputString) {
-    return codec(inputString, 0, 2 * inputString.length());
+  @Override
+  public final byte[] encrypt(byte[] input) {
+    return this.codec(input);
   }
-
-  public String codec(String inputString, int startPos, int bytesToCode) {
-    return new String(codec(inputString.getBytes(), startPos, bytesToCode));
+  
+  @Override
+  public final int cipherTextLength(int plainTextLength) {
+    return plainTextLength;
   }
 }

@@ -13,19 +13,23 @@ public class RC4RandomTest {
   
   @Test
   public void testRC4Random() {
-    testExample("Key", "Plaintext", "bbf316e8d940af0ad3");
-    testExample("Wiki", "pedia", "1021bf0420");
-    testExample("Secret", "Attack at dawn", "45a01f645fc35b383552544b9bf5");
+    testExample("Key", "Plaintext", "bbf316e8d940af0ad3", 0);
+    testExample("Wiki", "pedia", "1021bf0420", 0);
+    testExample("Secret", "Attack at dawn", "45a01f645fc35b383552544b9bf5", 0);
+    testExample("SuperSpecial123+", "Never", "fdcbfff62f", 0);
+    testExample("SuperSpecial123+", "Never", "059856a3e6", 8);
+    testExample("SuperSpecial123+", "Never", "5c0c358c74", 384);
+
   }
   
-  public void testExample(String keyString, String input, String expectedEncoding) {
+  public void testExample(String keyString, String input, String expectedEncoding, int drop) {
     byte[] key = keyString.getBytes();
     byte[] original =  input.getBytes();
-    byte[] encoded = (new RandomSymmetricStreamCipher(new RC4Random(key))).codec(original);
-    byte[] decoded = (new RandomSymmetricStreamCipher(new RC4Random(key))).codec(encoded);
+    byte[] encoded = (new RandomSymmetricStreamCipher(new RC4Random(key), drop)).codec(original);
+    byte[] decoded = (new RandomSymmetricStreamCipher(new RC4Random(key), drop)).codec(encoded);
     
     assertArrayEquals(original, decoded);
-    assertEquals(CryptoUtils.byteArrayToHexString(encoded), expectedEncoding);
+    assertEquals(expectedEncoding, CryptoUtils.byteArrayToHexString(encoded));
   }
 
 }

@@ -22,17 +22,15 @@ public class RandomSymmetricStreamCipher extends SymmetricStreamCipher {
     
     Arrays.fill(discard, CryptoUtils.ZERO_BYTE);
   }
-  
-  @Override
-  public byte[] codec(byte[] input, int startPos, int bytesToCode) {
-    
 
-    byte[] output = new byte[bytesToCode];
+  @Override
+  public byte[] codec(byte[] input) {
+    byte[] output = new byte[input.length];
 
     random.nextBytes(output);
 
-    for (int n = 0; n < bytesToCode; n++) {
-      output[n] = (byte) ((output[n] ^ input[n + startPos]) & 0xff);
+    for (int n = 0; n < input.length; n++) {
+      output[n] = (byte) ((output[n] ^ input[n]) & 0xff);
     }
 
     return output;
