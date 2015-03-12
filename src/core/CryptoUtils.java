@@ -151,6 +151,13 @@ public class CryptoUtils {
     }
   }
   
+  public static int[] xorIntArray(int[] a, int[] b, int[] out) {
+    for (int i = 0; i < a.length; i++) {
+      out[i] = a[i] ^ b[i];
+    }
+    return out;
+  }
+  
   public static byte[] intToBytes(int val, boolean isLittleEndian) {
     return intToBytes(val, new byte[4], 0, isLittleEndian);
   }
@@ -182,10 +189,10 @@ public class CryptoUtils {
     return intArrayFromBytes(new int[byteLength / 4], 0, bytes, start,  byteLength, isLittleEndian);
   }
   
-  public static int[] intArrayFromBytes(int[] result, int offset, byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
+  public static int[] intArrayFromBytes(int[] result, int intStart, byte[] bytes, int byteStart, int byteLength, boolean isLittleEndian) {
 
-    for (int i = 0; i < result.length; i++) {
-      result[i + offset] = CryptoUtils.intFromBytes(bytes, start + i * 4, isLittleEndian);
+    for (int i = 0; i < byteLength / 4; i++) {
+      result[i + intStart] = CryptoUtils.intFromBytes(bytes, byteStart + i * 4, isLittleEndian);
     }
 
     return result;
