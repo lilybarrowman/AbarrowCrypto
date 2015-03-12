@@ -1,11 +1,13 @@
 package core;
 
+import java.math.BigInteger;
+
 import org.apache.commons.lang.ArrayUtils;
 
 public abstract class Hasher {
   
   
-  protected int totalLength;
+  protected BigInteger totalLength;
   protected byte[] toHash;
   
   public Hasher() {
@@ -19,7 +21,7 @@ public abstract class Hasher {
     
     if (bytes.length > 0) {
       
-      totalLength += bytes.length;
+      totalLength = totalLength.add(BigInteger.valueOf(bytes.length));
       
       toHash = ArrayUtils.addAll(toHash, bytes);
       
@@ -47,7 +49,7 @@ public abstract class Hasher {
       CryptoUtils.fillWithZeroes(toHash);
     }
     toHash = new byte[0];
-    totalLength = 0;
+    totalLength = BigInteger.ZERO;
     return this;
   }
   

@@ -1,9 +1,7 @@
 package sha;
 
+import java.math.BigInteger;
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import core.Hasher;
 import core.CryptoUtils;
 
@@ -43,29 +41,6 @@ public class SHA2_512 extends Hasher {
   public SHA2_512() {
     reset();
   }
-  
-  @Override
-  public Hasher addBytes(byte[] bytes) {
-    if (bytes == null) {
-      throw new IllegalArgumentException("SHA512 cannot hash a null array.");
-    }
-    
-    totalLength += bytes.length;
-    
-    toHash = ArrayUtils.addAll(toHash, bytes);
-    
-    int i;
-    
-    for (i = 0; i + SHA2_512.BLOCK_BYTES <= toHash.length; i += SHA2_512.BLOCK_BYTES) {
-      hashBlock(toHash, i);
-    }
-        
-    if (i > 0 ) {
-      toHash = ArrayUtils.subarray(toHash, i, toHash.length);
-    }
-    
-    return this;
-  }
 
   @Override
   public byte[] computeHash() {
@@ -99,7 +74,12 @@ public class SHA2_512 extends Hasher {
   }
   
   private void appendWithLength(byte[] padded) {
-    CryptoUtils.longToBytes(totalLength * 8L, padded, padded.length - 8);
+    
+    byte[] hashBitLength = totalLength.multiply(BigInteger.valueOf(8)).toByteArray();
+    
+    for (int n = 0; (n < 16) && (n < hashBitLength.length);n++) {
+      padded[padded.length - 1 - n] = hashBitLength[hashBitLength.length - 1 - n];
+    }
   }
   
   protected void hashBlock(byte[] bytes, int start) {

@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -68,9 +69,24 @@ public class Main {
     RandomVisualizer.start(useFasterRandom ? new HasherRandom() : new HasherRandom(new Bcrypt("123456890123456".getBytes(), 4),
         new byte[0]));*/
     
-    StenographyDemo.start();
+    //StenographyDemo.start();
     
     
+    BigInteger b = new BigInteger(new byte[]{
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff,
+        (byte)0xff
+    });
+    
+    b = b.add(new BigInteger(new byte[]{1}));
+    
+    System.out.println(CryptoUtils.byteArrayToHexString(CryptoUtils.longToBytes(b.longValue(), false)));
+
     
     /*int STD_FREQ = 44100;
     

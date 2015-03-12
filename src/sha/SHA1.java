@@ -1,9 +1,7 @@
 package sha;
 
+import java.math.BigInteger;
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import core.Hasher;
 import core.CryptoUtils;
 
@@ -55,7 +53,7 @@ public class SHA1 extends Hasher {
   }
   
   private void appendWithLength(byte[] padded) {
-    CryptoUtils.longToBytes(totalLength * 8L, padded, padded.length - 8);
+    CryptoUtils.longToBytes(totalLength.multiply(BigInteger.valueOf(8)).longValue(), padded, padded.length - 8);
   }
   
   protected void hashBlock(byte[] bytes, int start) {

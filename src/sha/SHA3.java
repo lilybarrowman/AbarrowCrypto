@@ -1,7 +1,5 @@
 package sha;
 
-import java.util.Arrays;
-
 import core.CryptoUtils;
 import core.Hasher;
 
