@@ -55,7 +55,6 @@ public class TripleDES extends AsymmetricBlockCipher {
     Arrays.fill(temp2, CryptoUtils.ZERO_BYTE);
   }
 
-  @Override
   public int[] getValidKeyLengths() {
     return TripleDES.KEY_LENGTHS;
   }

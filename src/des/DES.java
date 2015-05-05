@@ -234,7 +234,6 @@ public class DES extends AsymmetricBlockCipher {
 
   }
 
-  @Override
   public int[] getValidKeyLengths() {
     return DES.KEY_LENGTHS;
   }

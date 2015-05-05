@@ -10,18 +10,17 @@ public class CTRModeCipher extends SymmetricStreamCipher {
   private byte[] temp;  
   private int blockBytes;
   
-
-  public CTRModeCipher(AsymmetricBlockCipher cipherCore, byte[] intializationVector) {
-    
-    core = cipherCore;
-    iv = intializationVector;
-    
-    blockBytes = core.getBlockBytes();
-    
-    if (blockBytes != iv.length) {
+  public void setIV(byte[] initVector) {
+    if (blockBytes != initVector.length) {
       throw new IllegalArgumentException("The initialization vector must be of the same length as the block size.");
     }
-    
+    iv = initVector;
+  }
+
+  public CTRModeCipher(AsymmetricBlockCipher cipherCore, byte[] intializationVector) {  
+    core = cipherCore;
+    blockBytes = core.getBlockBytes();
+    setIV(intializationVector);
     temp = new byte[blockBytes];
   }
   

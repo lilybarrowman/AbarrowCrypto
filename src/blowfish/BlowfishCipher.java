@@ -279,7 +279,6 @@ public class BlowfishCipher extends AsymmetricBlockCipher {
     return BLOCK_BYTES;
   }
 
-  @Override
   public int[] getValidKeyLengths() {
     return BlowfishCipher.KEY_LENGTHS;
   }

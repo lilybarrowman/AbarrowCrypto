@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project AbarrowCrypto">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="C:/Users/Adam/Documents/Development Workspace/Java Workspace/AbarrowCrypto/build/AbarrowChat.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="chat.ChatUI"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="C:/Users/Adam/Documents/Development Workspace/Java Workspace/AbarrowCrypto/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Development/eclipse-standard-kepler-R-win32-x86_64/eclipse/plugins/org.junit_4.11.0.v201303080030/junit.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Development/eclipse-standard-kepler-R-win32-x86_64/eclipse/plugins/org.hamcrest.core_1.3.0.v201303031735.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Adam/Documents/Development Workspace/Java Workspace/3rd Party/commons-lang-2.6/commons-lang-2.6.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="C:/Users/Adam/Documents/Development Workspace/Java Workspace/3rd Party/wavtools.jar"/>
+        </jar>
+    </target>
+</project>

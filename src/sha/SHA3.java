@@ -19,9 +19,10 @@ public class SHA3 extends Hasher {
    * col 4 row 4 depth 1599 -> [4][4][63] -> 1599
    */
   private long[] state;
-  
+  private byte[] padded;
   private long[] stateCopy;
   private long[] C;
+  private int[] stateInts;
 
   private static final long[] RC = new long[] { 0x0000000000000001L, 0x0000000000008082L, 0x800000000000808aL,
       0x8000000080008000L, 0x000000000000808bL, 0x0000000080000001L, 0x8000000080008081L, 0x8000000000008009L,
@@ -35,12 +36,12 @@ public class SHA3 extends Hasher {
 
   private int outputBytes;
   private int blockBytes;
-  
+
   private SHA3Mode mode;
 
   public SHA3(SHA3Mode type, int outputSize) {
     mode = type;
-    reset();
+    
     outputBytes = outputSize;
     if (outputBytes == 28) {
       blockBytes = 144;
@@ -53,21 +54,21 @@ public class SHA3 extends Hasher {
     } else {
       throw new IllegalArgumentException("SHA3 cannot have an ouput size of " + outputSize + " bytes.");
     }
-
+    padded = new byte[blockBytes];
+    reset();
   }
 
   @Override
-  public byte[] computeHash() {
-    byte[] padded = new byte[blockBytes];
-    int copiedLength = toHash.length;
+  public byte[] computeHash(byte[] out, int start) {
+    int copiedLength = toHashPos;
 
     if (copiedLength == 0) {
       if (mode == SHA3Mode.KECCAK) {
-        padded[0] = (byte) 0x1; //Keccak  0000 0001
+        padded[0] = (byte) 0x1; // Keccak 0000 0001
       } else {
         padded[0] = (byte) 0x6; // SHA3 0000 0110
       }
-      padded[blockBytes - 1] = (byte) 0x80; //1000 0000
+      padded[blockBytes - 1] = (byte) 0x80; // 1000 0000
       hashBlock(padded, 0);
 
     } else if (copiedLength == (blockBytes - 1)) {
@@ -82,15 +83,15 @@ public class SHA3 extends Hasher {
     } else {
       System.arraycopy(toHash, 0, padded, 0, copiedLength);
       if (mode == SHA3Mode.KECCAK) {
-        padded[copiedLength] = (byte) 0x1; //Keccak  0000 0001
+        padded[copiedLength] = (byte) 0x1; // Keccak 0000 0001
       } else {
         padded[copiedLength] = (byte) 0x6; // SHA3 0000 0110
       }
       padded[blockBytes - 1] = (byte) 0x80; // 1000 0000
       hashBlock(padded, 0);
     }
-    
-    return CryptoUtils.safeLongArrayToByteArray(new byte[outputBytes], 0, state, (outputBytes + 7) / 8 , true);
+    CryptoUtils.fillWithZeroes(padded);
+    return CryptoUtils.safeLongArrayToByteArray(out, start, state, (outputBytes + 7) / 8, true);
   }
 
   @Override
@@ -99,11 +100,14 @@ public class SHA3 extends Hasher {
     if (state != null) {
       CryptoUtils.fillWithZeroes(state);
       CryptoUtils.fillWithZeroes(stateCopy);
-      CryptoUtils.fillWithZeroes(C); 
+      CryptoUtils.fillWithZeroes(stateInts);
+      CryptoUtils.fillWithZeroes(C);
+      CryptoUtils.fillWithZeroes(padded);
     } else {
       state = new long[25];
       stateCopy = new long[25];
       C = new long[5];
+      stateInts = new int[50];
       
     }
     return this;
@@ -119,31 +123,30 @@ public class SHA3 extends Hasher {
     return outputBytes;
   }
 
-  private int getNthBit(long i, int n) {
-    //return (int) ((i >>> (63 - n)) & 1);
+  /*private int getNthBit(long i, int n) {
     return (int) ((i >>> n) & 1);
   }
-  
-  
+
   private int getXYZBit(long[] curState, int x, int y, int z) {
     return getNthBit(curState[y * 5 + x], z);
   }
-  
+
   private void outputState(long[] curState) {
     for (int index = 0; index < 1600; index++) {
-      
+
       int row = index / 320;
       int column = (index / 64) % 5;
       int depth = index % 64;
-      
-      System.out.println(index + " (" + column + ", " + row + ", " + depth + ") " + getXYZBit(curState, column, row, depth));
+
+      System.out.println(index + " (" + column + ", " + row + ", " + depth + ") "
+          + getXYZBit(curState, column, row, depth));
     }
   }
-  
+
   private void outputStateBitString(long[] curState) {
     String string = "";
     for (int index = 0; index < 1600; index++) {
-      
+
       int row = index / 320;
       int column = (index / 64) % 5;
       int depth = index % 64;
@@ -155,16 +158,16 @@ public class SHA3 extends Hasher {
     System.out.println(string);
 
   }
-  
-  private static final int[] ROW_OUTPUT_ORDER = new int[]{2, 1, 0, 4, 3};
-  private static final int[] COLUMN_OUTPUT_ORDER = new int[]{3, 4, 0, 1, 2};
-  
+
+  private static final int[] ROW_OUTPUT_ORDER = new int[] { 2, 1, 0, 4, 3 };
+  private static final int[] COLUMN_OUTPUT_ORDER = new int[] { 3, 4, 0, 1, 2 };
+
   private void outputSlice(long[] curState, int depth) {
     for (int row = 0; row < 5; row++) {
       outputRow(curState, row, depth);
     }
   }
-  
+
   private void outputRow(long[] curState, int row, int depth) {
     String rowString = "";
     for (int column = 0; column < 5; column++) {
@@ -172,27 +175,26 @@ public class SHA3 extends Hasher {
     }
     System.out.println(rowString);
   }
-  
+
   private void outputSheet(long[] curState, int column) {
     for (int row = 0; row < 5; row++) {
       String rowString = "";
       for (int depth = 0; depth < 64; depth++) {
         rowString += getXYZBit(curState, column, ROW_OUTPUT_ORDER[row], depth);
-        if (depth%8 ==7){
+        if (depth % 8 == 7) {
           rowString += " ";
         }
       }
       System.out.println(rowString);
     }
   }
-  
+
   private void outputSheets(long[] curState) {
     for (int column = 0; column < 5; column++) {
       outputSheet(curState, COLUMN_OUTPUT_ORDER[column]);
       System.out.println("------");
     }
-  }
-  
+  }*/
 
   @Override
   protected void hashBlock(byte[] data, int startIndex) {    
@@ -207,7 +209,7 @@ public class SHA3 extends Hasher {
         C[x] = state[x] ^ state[5 + x] ^ state[10 + x] ^ state[15 + x] ^ state[20 + x];
       }
       
-      int [] stateInts = CryptoUtils.intArrayFromBytes(CryptoUtils.longArrayToByteArray(state), 0, 200);
+      CryptoUtils.intArrayFromBytes(stateInts, 0, CryptoUtils.longArrayToByteArray(state), 0, 200, false);
       
       
       for (int x = 0; x < 5; x++) {
@@ -254,8 +256,8 @@ public class SHA3 extends Hasher {
       state[0] ^= RC[n];
     }
     
+    CryptoUtils.fillWithZeroes(stateInts);
     CryptoUtils.fillWithZeroes(stateCopy);
     CryptoUtils.fillWithZeroes(C); 
   }
-
 }

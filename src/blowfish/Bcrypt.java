@@ -51,7 +51,7 @@ public class Bcrypt extends Hasher {
   }
 
   @Override
-  public byte[] computeHash() {
+  public byte[] computeHash(byte[] out , int start) {
     
     BlowfishCipher cipher = new BlowfishCipher(ArrayUtils.add(bytesToHash, (byte)0), salt, rounds);
     
@@ -79,7 +79,9 @@ public class Bcrypt extends Hasher {
     CryptoUtils.intToBytes(e.intValue(), cipherText, 16);
     CryptoUtils.intToBytes(f.intValue(), cipherText, 20);
     
-    return cipherText;
+    System.arraycopy(cipherText, 0, out, start, cipherText.length);
+    
+    return out;
   }
   
   @Override

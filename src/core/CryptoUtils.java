@@ -10,7 +10,6 @@ public class CryptoUtils {
   public static final byte ZERO_BYTE = (byte) 0;
   public static final byte ONE_BYTE = (byte) 1;
 
-
   private static int[] LAST_N_BITS = new int[] {
       // [0] 0000 0000
       0x0,
@@ -50,19 +49,25 @@ public class CryptoUtils {
       0xfe,
       // [8] 1111 1111
       0xff };
-  
+
   public static void fillWithZeroes(byte[] data) {
     for (int n = 0; n < data.length; n++) {
       data[n] = CryptoUtils.ZERO_BYTE;
     }
   }
-  
+
+  public static void fillWithZeroes(char[] data) {
+    for (int n = 0; n < data.length; n++) {
+      data[n] = 0;
+    }
+  }
+
   public static void fillWithZeroes(long[] data) {
     for (int n = 0; n < data.length; n++) {
       data[n] = 0;
     }
   }
-  
+
   public static void fillWithZeroes(int[] data) {
     for (int n = 0; n < data.length; n++) {
       data[n] = 0;
@@ -72,15 +77,15 @@ public class CryptoUtils {
   public static int swapEndianness(int x) {
     return CryptoUtils.intFromBytes(CryptoUtils.intToBytes(x, new byte[4], 0, false), 0, true);
   }
-  
+
   public static long swapEndianness(long x) {
     return CryptoUtils.longFromBytes(CryptoUtils.longToBytes(x, new byte[8], 0, false), 0, true);
   }
-  
+
   public static int[] swapEndianness(int[] ints) {
     return CryptoUtils.intArrayFromBytes(CryptoUtils.intArrayToByteArray(ints, false), 0, 4 * ints.length, true);
   }
-  
+
   public static int rotateIntLeft(int x, int digits) {
     return (x << digits) | (x >>> (32 - digits));
   }
@@ -126,21 +131,20 @@ public class CryptoUtils {
   }
 
   public static byte[] utf16CharArrayToByteAray(char[] input, byte[] output) {
-    for (int i = 0; i < input.length; i++) {
-      int letter = input[i];
-      output[i * 2] = (byte)((letter >>> 8) & 0xff);
-      output[i * 2 + 1] = (byte)(letter & 0xff);
+    for (int i = 0; (i < output.length) && ((i / 2) < input.length); i++) {
+      int letter = input[i / 2];
+      output[i] = (byte) ((letter >>> (8 * (1 - i % 2))) & 0xff);
     }
     return output;
   }
-  
+
   public static byte[] utf8CharArrayToByteAray(char[] input, byte[] output) {
-    for (int i = 0; i < input.length; i++) {
-      output[i] = (byte)(input[i] & 0xff);
+    for (int i = 0; i < (output.length) && (i < input.length); i++) {
+      output[i] = (byte) (input[i] & 0xff);
     }
     return output;
   }
-  
+
   public static byte[] intToBytes(int val, byte[] bytes, int start) {
     return intToBytes(val, bytes, start, false);
   }
@@ -150,18 +154,18 @@ public class CryptoUtils {
       ints[i] ^= val;
     }
   }
-  
+
   public static int[] xorIntArray(int[] a, int[] b, int[] out) {
     for (int i = 0; i < a.length; i++) {
       out[i] = a[i] ^ b[i];
     }
     return out;
   }
-  
+
   public static byte[] intToBytes(int val, boolean isLittleEndian) {
     return intToBytes(val, new byte[4], 0, isLittleEndian);
   }
-  
+
   public static byte[] longToBytes(long val, boolean isLittleEndian) {
     return longToBytes(val, new byte[8], 0, isLittleEndian);
   }
@@ -186,10 +190,11 @@ public class CryptoUtils {
   }
 
   public static int[] intArrayFromBytes(byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
-    return intArrayFromBytes(new int[byteLength / 4], 0, bytes, start,  byteLength, isLittleEndian);
+    return intArrayFromBytes(new int[byteLength / 4], 0, bytes, start, byteLength, isLittleEndian);
   }
-  
-  public static int[] intArrayFromBytes(int[] result, int intStart, byte[] bytes, int byteStart, int byteLength, boolean isLittleEndian) {
+
+  public static int[] intArrayFromBytes(int[] result, int intStart, byte[] bytes, int byteStart, int byteLength,
+      boolean isLittleEndian) {
 
     for (int i = 0; i < byteLength / 4; i++) {
       result[i + intStart] = CryptoUtils.intFromBytes(bytes, byteStart + i * 4, isLittleEndian);
@@ -197,16 +202,17 @@ public class CryptoUtils {
 
     return result;
   }
-  
+
   public static long[] longArrayFromBytes(byte[] bytes, int start, int byteLength) {
     return longArrayFromBytes(bytes, start, byteLength, false);
   }
 
   public static long[] longArrayFromBytes(byte[] bytes, int start, int byteLength, boolean isLittleEndian) {
-    return longArrayFromBytes(new long[byteLength / 8], 0, bytes, start,  byteLength / 8, isLittleEndian);
+    return longArrayFromBytes(new long[byteLength / 8], 0, bytes, start, byteLength / 8, isLittleEndian);
   }
-  
-  public static long[] longArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart, int resultLength, boolean isLittleEndian) {
+
+  public static long[] longArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart,
+      int resultLength, boolean isLittleEndian) {
 
     for (int i = 0; i < resultLength; i++) {
       result[resultStart + i] = CryptoUtils.longFromBytes(bytes, byteStart + i * 8, isLittleEndian);
@@ -214,9 +220,9 @@ public class CryptoUtils {
 
     return result;
   }
-  
-  
-  public static long[] xorLongArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart, int resultLength, boolean isLittleEndian) {
+
+  public static long[] xorLongArrayFromBytes(long[] result, int resultStart, byte[] bytes, int byteStart,
+      int resultLength, boolean isLittleEndian) {
 
     for (int i = 0; i < resultLength; i++) {
       result[resultStart + i] ^= CryptoUtils.longFromBytes(bytes, byteStart + i * 8, isLittleEndian);
@@ -224,6 +230,7 @@ public class CryptoUtils {
 
     return result;
   }
+
   public static int intFromBytes(byte[] bytes, int start) {
     return CryptoUtils.intFromBytes(bytes, start, false);
   }
@@ -256,56 +263,56 @@ public class CryptoUtils {
   public static long longFromBytes(byte[] bytes, int start) {
     return longFromBytes(bytes, start, false);
   }
-  
-  
+
   public static long longFromBytes(byte[] bytes, int start, boolean isLittleEndian) {
     if (isLittleEndian) {
-      return ((bytes[start + 7] & 0xffL) << 56) + ((bytes[start + 6] & 0xffL) << 48) + ((bytes[start + 5] & 0xffL) << 40)
-          + ((bytes[start + 4] & 0xffL) << 32) + ((bytes[start + 3] & 0xffL) << 24) + ((bytes[start + 2] & 0xffL) << 16)
-          + ((bytes[start + 1] & 0xffL) << 8) + (bytes[start] & 0xffL);
+      return ((bytes[start + 7] & 0xffL) << 56) + ((bytes[start + 6] & 0xffL) << 48)
+          + ((bytes[start + 5] & 0xffL) << 40) + ((bytes[start + 4] & 0xffL) << 32)
+          + ((bytes[start + 3] & 0xffL) << 24) + ((bytes[start + 2] & 0xffL) << 16) + ((bytes[start + 1] & 0xffL) << 8)
+          + (bytes[start] & 0xffL);
     } else {
       return ((bytes[start] & 0xffL) << 56) + ((bytes[start + 1] & 0xffL) << 48) + ((bytes[start + 2] & 0xffL) << 40)
-          + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24) + ((bytes[start + 5] & 0xffL) << 16)
-          + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
+          + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24)
+          + ((bytes[start + 5] & 0xffL) << 16) + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
     }
   }
-  
+
   public static long safeLongFromBytes(byte[] bytes, int start) {
     long output = 0;
-    
+
     int index = start;
-    
+
     int shift = 56;
-    
-    while((bytes.length > index) && (shift >= 0)) {
-      output +=(bytes[index] & 0xffL) << shift;
+
+    while ((bytes.length > index) && (shift >= 0)) {
+      output += (bytes[index] & 0xffL) << shift;
       index++;
       shift -= 8;
     }
-    
+
     return output;
   }
-  
+
   public static byte[] safeLongToBytes(long val, byte[] bytes, int start, boolean isLittleEndian) {
-     int index = start;
+    int index = start;
     if (isLittleEndian) {
       int shift = 0;
-      
-      while((bytes.length > index) && (shift <= 56)) {
-        bytes[index] = (byte)((val >> shift) & 0xffL);
+
+      while ((bytes.length > index) && (shift <= 56)) {
+        bytes[index] = (byte) ((val >> shift) & 0xffL);
         index++;
         shift += 8;
       }
     } else {
       int shift = 56;
-     
-      while((bytes.length > index) && (shift >= 0)) {
-        bytes[index] = (byte)((val >> shift) & 0xffL);
+
+      while ((bytes.length > index) && (shift >= 0)) {
+        bytes[index] = (byte) ((val >> shift) & 0xffL);
         index++;
         shift -= 8;
       }
     }
-    
+
     return bytes;
   }
 
@@ -314,8 +321,9 @@ public class CryptoUtils {
   }
 
   public static byte[] intArrayToByteArray(int[] ints, boolean isLittleEndian) {
-    return intArrayToByteArray(new byte[ints.length * 4], 0 , ints, isLittleEndian);
+    return intArrayToByteArray(new byte[ints.length * 4], 0, ints, isLittleEndian);
   }
+
   public static byte[] intArrayToByteArray(byte[] bytes, int byteStart, int[] ints, boolean isLittleEndian) {
     for (int i = 0; i < ints.length; i++) {
       intToBytes(ints[i], bytes, byteStart + i * 4, isLittleEndian);
@@ -330,15 +338,17 @@ public class CryptoUtils {
   public static byte[] longArrayToByteArray(long[] longs, boolean isLittleEndian) {
     return longArrayToByteArray(new byte[longs.length * 8], 0, longs, longs.length, isLittleEndian);
   }
-  
-  public static byte[] longArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs, boolean isLittleEndian) {
+
+  public static byte[] longArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs,
+      boolean isLittleEndian) {
     for (int i = 0; i < numLongs; i++) {
       longToBytes(longs[i], bytes, byteStart + i * 8, isLittleEndian);
     }
     return bytes;
   }
-  
-  public static byte[] safeLongArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs, boolean isLittleEndian) {
+
+  public static byte[] safeLongArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs,
+      boolean isLittleEndian) {
     for (int i = 0; i < numLongs; i++) {
       safeLongToBytes(longs[i], bytes, byteStart + i * 8, isLittleEndian);
     }
@@ -368,6 +378,10 @@ public class CryptoUtils {
 
   public static String byteArrayToHexString(byte[] bytes) {
     return DatatypeConverter.printHexBinary(bytes).toLowerCase();
+  }
+
+  public static byte[] hexStringToBytes(String hex) {
+    return DatatypeConverter.parseHexBinary(hex);
   }
 
   public static String hexStringToBinaryString(String hex) {
@@ -428,30 +442,28 @@ public class CryptoUtils {
     return CryptoUtils.rotateLongRight(x, 19) ^ CryptoUtils.rotateLongRight(x, 61) ^ (x >>> 6);
   }
 
-  
   public static byte[] xorByteArrays(byte[] a, byte[] b) {
     if (a.length != b.length) {
       throw new IllegalArgumentException("Cannot xor byte arrays of unequal lenghts.");
     }
     return CryptoUtils.xorByteArrays(a, b, new byte[a.length]);
   }
-  
+
   public static byte[] fillLastBytes(byte[] source, byte[] target, int maxToFill) {
-    
+
     int startingByte = source.length - maxToFill;
-    startingByte = (startingByte<0 ) ? 0: startingByte;
+    startingByte = (startingByte < 0) ? 0 : startingByte;
     int bytesToCopy = source.length - startingByte;
-    
+
     System.arraycopy(source, startingByte, target, target.length - bytesToCopy, bytesToCopy);
-    
+
     return target;
   }
-  
+
   public static byte[] xorByteArrays(byte[] a, byte[] b, byte[] c) {
     return CryptoUtils.xorByteArrays(a, 0, b, 0, c, 0, a.length);
   }
-  
-  
+
   public static byte[] xorByteArrays(byte[] a, int aStart, byte[] b, int bStart, byte[] c, int cStart, int length) {
     for (int i = 0; i < length; i++) {
       c[i + cStart] = (byte) ((a[i + aStart] ^ b[i + bStart]) & 0xff);
@@ -471,56 +483,51 @@ public class CryptoUtils {
     }
     return output;
   }
-  
+
   public static int getBitFromByteArray(byte[] bytes, int bitIndex) {
     int bitPos = bitIndex % 8;
-    int firstN = bytes[bitIndex / 8] & FIRST_N_BITS[bitPos + 1];
     return ((bytes[bitIndex / 8] & FIRST_N_BITS[bitPos + 1]) >>> (7 - bitPos)) & 0x1;
   }
-  
+
   public static byte[] permuteByteArrayByBit(byte[] input, int srcPos, byte[] output, int[] permutation) {
     int c = 0;
-    int n = 0;    
+    int n = 0;
     boolean going = true;
     while (going) {
       int val = 0;
-      for (int i = 0; i < 8; i ++) {
-        //we've exhausted all the bits
+      for (int i = 0; i < 8; i++) {
+        // we've exhausted all the bits
         if (c >= permutation.length) {
           going = false;
           break;
         }
-        
-        //add the new bit
+
+        // add the new bit
         val |= getBitFromByteArray(input, srcPos + permutation[c]) << (7 - i);
         c++;
       }
       if (output.length > n) {
-        output[n] = (byte)val;
+        output[n] = (byte) val;
         n++;
       }
     }
-    
+
     return output;
   }
-  
+
   public static int permuteIntByBit(int input, int srcPos, int[] permutation) {
     int output = 0;
-    for(int n = 0; n < permutation.length; n ++) {
-      output += ((input >>> (31-permutation[n]-srcPos)) & 0x1) << (31 - n);
+    for (int n = 0; n < permutation.length; n++) {
+      output += ((input >>> (31 - permutation[n] - srcPos)) & 0x1) << (31 - n);
     }
     return output;
   }
-  
-  
+
   public static long permuteIntByBitToLong(int input, int srcPos, int[] permutation) {
     long inputAsLong = input;
     long output = 0;
-    for(int n = 0; n < permutation.length; n ++) {
-      int leftShift = 31-permutation[n]-srcPos;
-      long leftShifted = inputAsLong >> leftShift;
-      long leftShiftedAndOne = leftShifted & 0x1;
-      output += ((inputAsLong >>> (31-permutation[n]-srcPos)) & 0x1) << (63 - n);
+    for (int n = 0; n < permutation.length; n++) {
+      output += ((inputAsLong >>> (31 - permutation[n] - srcPos)) & 0x1) << (63 - n);
     }
     return output;
   }
@@ -547,7 +554,7 @@ public class CryptoUtils {
 
       int bitsFromCurrentBytes = getLastBitsFromBytes(input[currentSrcByte] & 0xff, currestSrcByteBitPos,
           bitsLeftOnSrcByte, currestDestByteBitPos);
-      
+
       int bitsToOrWithDest = Math.min(bitsLeftOnDestByte, Math.min(bitsLeftOnSrcByte, srcBitsLeft));
 
       output[currentDestByte] |= (bitsFromCurrentBytes & (FIRST_N_BITS[bitsToOrWithDest] >> currestDestByteBitPos));
@@ -560,19 +567,21 @@ public class CryptoUtils {
 
     return output;
   }
-  
+
   public static byte[] rotateByteArrayRight(byte[] input, int bitLength, int bitsRight, byte[] output) {
-    return copyBitsFromByteArray(input, bitLength - bitsRight, bitsRight, copyBitsFromByteArray(input, 0, bitLength - bitsRight, output, bitsRight), 0);
+    return copyBitsFromByteArray(input, bitLength - bitsRight, bitsRight, copyBitsFromByteArray(input, 0, bitLength
+        - bitsRight, output, bitsRight), 0);
   }
-  
+
   public static byte[] rotateByteArrayLeft(byte[] input, int bitLength, int bitsLeft, byte[] output) {
-    return copyBitsFromByteArray(input, bitsLeft, bitLength - bitsLeft, copyBitsFromByteArray(input, 0, bitsLeft, output, bitLength - bitsLeft), 0);
+    return copyBitsFromByteArray(input, bitsLeft, bitLength - bitsLeft, copyBitsFromByteArray(input, 0, bitsLeft,
+        output, bitLength - bitsLeft), 0);
   }
 
   public static int getLastBitsFromBytes(int byteInt, int start, int len) {
     return getLastBitsFromBytes(byteInt, start, len, 0);
   }
-  
+
   public static int getLastBitsFromBytes(int byteInt, int start, int len, int pos) {
     int res = byteInt & LAST_N_BITS[len];
     return leftOrRightBitShift(res, pos - start);
@@ -585,18 +594,18 @@ public class CryptoUtils {
       return src << (-digitsToShiftRightIsPositive);
     }
   }
-  
+
   public static int[] integerRange(int start, int end) {
-    if( end < start) {
+    if (end < start) {
       throw new IllegalArgumentException("The end is less then the start!");
     }
-    int[] values = new int[]{end-start+1};
+    int[] values = new int[] { end - start + 1 };
     for (int i = 0; i < values.length; i++) {
       values[i] = start + i;
     }
     return values;
   }
-  
+
   public static int multiplyFiniteFieldBytes(int a, int b, int irreduciblePolynomial) {
     int out = 0;
     for (int n = 7; n >= 0; n--) {
@@ -607,6 +616,7 @@ public class CryptoUtils {
     int count = 0;
     while (out >= 256 && count < 100) {
       int c = out;
+      //find the most significant bit
       int j = -1;
       while (c > 0) {
         c = c >>> 1;

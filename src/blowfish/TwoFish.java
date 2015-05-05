@@ -159,7 +159,6 @@ public class TwoFish extends AsymmetricBlockCipher {
     return TwoFish.BLOCK_BYTES;
   }
 
-  @Override
   public int[] getValidKeyLengths() {
     return TwoFish.KEY_LENGTHS;
   }

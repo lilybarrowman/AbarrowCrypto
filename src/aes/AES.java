@@ -269,8 +269,6 @@ public class AES extends AsymmetricBlockCipher {
     copyStateToByteArray(output, destPos);
   }
 
-
-  @Override
   public int[] getValidKeyLengths() {
     return AES.KEY_LENGTHS;
   }

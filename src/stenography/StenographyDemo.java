@@ -190,7 +190,7 @@ public class StenographyDemo implements ActionListener {
     return aesCheckBox.isSelected() || trippleDesCheckBox.isSelected();
   }
 
-  public static void start() {
+  public static void main(String[] args) {
     new StenographyDemo();
   }
 

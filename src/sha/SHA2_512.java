@@ -37,15 +37,15 @@ public class SHA2_512 extends Hasher {
   private long[] hash;
   
   private long[] W;
+  byte[] padded;
   
   public SHA2_512() {
     reset();
   }
 
   @Override
-  public byte[] computeHash() {
-    byte[] padded = new byte[SHA2_512.BLOCK_BYTES];
-    int copiedLength = toHash.length;
+  public byte[] computeHash(byte[] out, int start) {
+    int copiedLength = toHashPos;
     
     if (copiedLength == 0) {
       fillPadding(padded, 0);
@@ -64,8 +64,8 @@ public class SHA2_512 extends Hasher {
       fillPadding(padded, copiedLength);
       hashBlock(padded, 0);
     }
-    
-    return CryptoUtils.longArrayToByteArray(hash);
+    CryptoUtils.fillWithZeroes(padded);
+    return CryptoUtils.longArrayToByteArray(out, start, hash, hash.length, false);
   }
   
   private void fillPadding(byte[] padded, int startIndex) {
@@ -122,14 +122,13 @@ public class SHA2_512 extends Hasher {
     super.reset();
     if (hash == null) {
       hash = Arrays.copyOf(SHA2_512.INITIAL_HASHES, 8);
+      padded = new byte[SHA2_512.BLOCK_BYTES];
+      W = new long[80];
+
     } else {
       System.arraycopy(SHA2_512.INITIAL_HASHES, 0, hash, 0, 8);
-    }
-    
-    if (W == null) {
-      W = new long[80];
-    } else {
       CryptoUtils.fillWithZeroes(W);
+      CryptoUtils.fillWithZeroes(padded);
     }
     
     return this;

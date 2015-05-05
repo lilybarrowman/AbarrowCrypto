@@ -2,19 +2,19 @@ package core;
 
 import java.math.BigInteger;
 
-import org.apache.commons.lang.ArrayUtils;
-
 public abstract class Hasher {
   
   
   protected BigInteger totalLength;
   protected byte[] toHash;
+  protected int toHashPos;
   
   public Hasher() {
     reset();
   }  
     
   public Hasher addBytes(byte[] bytes) {
+    int blockBytes = getBlockBytes();
     if (bytes == null) {
       throw new IllegalArgumentException("Cannot hash a null array.");
     }
@@ -23,32 +23,45 @@ public abstract class Hasher {
       
       totalLength = totalLength.add(BigInteger.valueOf(bytes.length));
       
-      toHash = ArrayUtils.addAll(toHash, bytes);
-      
-      int i;
-      
-      for (i = 0; i + getBlockBytes() <= toHash.length; i += getBlockBytes()) {
-        hashBlock(toHash, i);
-      }
-          
-      if (i > 0 ) {
-        toHash = ArrayUtils.subarray(toHash, i, toHash.length);
+      if (bytes.length >= blockBytes - toHashPos) {
+        
+        System.arraycopy(bytes, 0, toHash, toHashPos, blockBytes - toHashPos);
+        hashBlock(toHash, 0);
+        CryptoUtils.fillWithZeroes(toHash);
+        int startPos = getBlockBytes() - toHashPos;
+        
+        while (bytes.length - startPos >= blockBytes) {
+          hashBlock(bytes, startPos);
+          startPos += blockBytes;
+        }
+        toHashPos = bytes.length - startPos;
+        System.arraycopy(bytes, startPos, toHash, 0, toHashPos);
+      } else {
+        System.arraycopy(bytes, 0, toHash, toHashPos, bytes.length);
+        toHashPos += bytes.length;
       }
     }
     
     return this;
   }
   
-  protected abstract void hashBlock(byte[] data, int index);
+  protected abstract void hashBlock(byte[] data, int srcPos);
   
-  public abstract byte[] computeHash();
+  public abstract byte[] computeHash(byte[] out, int start);
+  
+  public final byte[] computeHash() {
+    return computeHash(new byte[getHashByteLength()], 0);
+  }
+
   
   public Hasher reset() {
-    if (toHash != null){
+    if (toHash == null){
+       toHash = new byte[256];
+    } else {
       //security paranoia
       CryptoUtils.fillWithZeroes(toHash);
     }
-    toHash = new byte[0];
+    toHashPos = 0;
     totalLength = BigInteger.ZERO;
     return this;
   }

@@ -90,7 +90,6 @@ public class Serpent extends AsymmetricBlockCipher {
     return Serpent.BLOCK_BYTES;
   }
 
-  @Override
   public int[] getValidKeyLengths() {
     return Serpent.KEY_LENGTHS;
   }

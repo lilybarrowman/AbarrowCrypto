@@ -16,17 +16,16 @@ public class SHA1 extends Hasher {
   
   private int[] hash;
   private int[] W;
+  byte[] padded;
   
   public SHA1(){
     reset();
   }
 
   @Override
-  public byte[] computeHash() {
-    byte[] padded = new byte[SHA1.BLOCK_BYTES];
+  public byte[] computeHash(byte[] out, int start) {
     
-    int copiedLength = toHash.length;
-    
+    int copiedLength = toHashPos;
     if (copiedLength == 0) {
       fillPadding(padded, 0);
       hashBlock(padded, 0);
@@ -44,7 +43,8 @@ public class SHA1 extends Hasher {
       hashBlock(padded, 0);
     }
     
-    return CryptoUtils.intArrayToByteArray(hash);
+    CryptoUtils.fillWithZeroes(padded);
+    return CryptoUtils.intArrayToByteArray(out, start, hash, false);
   }
   
   private void fillPadding(byte[] padded, int startIndex) {
@@ -101,12 +101,16 @@ public class SHA1 extends Hasher {
   @Override
   public Hasher reset() {
     super.reset();
-    hash = Arrays.copyOf(SHA1.INITIAL_HASHES, 5);
-    if (W==null) {
+    if (hash == null) {
+      hash = Arrays.copyOf(SHA1.INITIAL_HASHES, 5);
       W = new int[80];
+      padded = new byte[SHA1.BLOCK_BYTES];
     } else {
+      System.arraycopy(SHA1.INITIAL_HASHES, 0, hash, 0, 5);
       CryptoUtils.fillWithZeroes(W);
+      CryptoUtils.fillWithZeroes(padded);
     }
+    
     return this;
   }
   
