@@ -3,8 +3,8 @@ package random;
 import java.util.Arrays;
 import java.util.Random;
 
+import cipher.StreamCipher;
 import core.CryptoUtils;
-import core.StreamCipher;
 
 public class RandomStreamCipher extends StreamCipher {
   

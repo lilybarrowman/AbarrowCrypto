@@ -1,10 +1,7 @@
 package hmac;
 
+import hash.Hasher;
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
-import core.Hasher;
 import core.CryptoUtils;
 
 public class HMAC {

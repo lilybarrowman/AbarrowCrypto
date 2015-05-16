@@ -1,9 +1,12 @@
 package random;
 
 import static org.junit.Assert.assertArrayEquals;
+
 import javax.xml.bind.DatatypeConverter;
+
 import org.junit.Test;
-import aes.AES;
+
+import cipher.aes.AES;
 
 public class CTRModeCipherTest {
   @Test

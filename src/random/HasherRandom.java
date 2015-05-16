@@ -1,12 +1,13 @@
 package random;
 
+import hash.Hasher;
+import hash.sha.SHA2_512;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
 
-import sha.SHA2_512;
 import core.CryptoUtils;
-import core.Hasher;
 
 public class HasherRandom extends BufferedRandom {
 

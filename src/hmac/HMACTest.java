@@ -1,11 +1,10 @@
 package hmac;
 
 import static org.junit.Assert.*;
-import md.MD5;
+import hash.md.MD5;
+import hash.sha.SHA1;
 
 import org.junit.Test;
-
-import sha.SHA1;
 
 public class HMACTest {
 

@@ -30,11 +30,11 @@ import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 
+import cipher.Cipher;
+import cipher.CipherMaker;
+import cipher.des.TripleDES;
 import wavtools.WavSampleData;
-import core.Cipher;
-import core.CipherMaker;
 import core.CryptoUtils;
-import des.TripleDES;
 
 public class StenographyDemo implements ActionListener {
 

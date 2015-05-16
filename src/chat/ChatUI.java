@@ -1,5 +1,8 @@
 package chat;
 
+import hash.Hasher;
+import hash.sha.SHA3;
+import hash.sha.SHA3Mode;
 import hmac.HMAC;
 
 import java.awt.Container;
@@ -39,19 +42,16 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
-import aes.AES;
-import blowfish.TwoFish;
+import cipher.BlockCipher;
+import cipher.CompoundBlockCipher;
+import cipher.StreamCipher;
+import cipher.aes.AES;
+import cipher.blowfish.TwoFish;
+import cipher.serpent.Serpent;
 import pbkdf2.PBKDF2;
 import random.CTRModeRandom;
 import random.RandomStreamCipher;
-import serpent.Serpent;
-import sha.SHA3;
-import sha.SHA3Mode;
-import core.BlockCipher;
-import core.CompoundBlockCipher;
 import core.CryptoUtils;
-import core.Hasher;
-import core.StreamCipher;
 
 public class ChatUI implements MouseMotionListener, MouseListener {
 

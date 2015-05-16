@@ -1,7 +1,8 @@
 package random;
 
 import java.math.BigInteger;
-import core.BlockCipher;
+
+import cipher.BlockCipher;
 import core.CryptoUtils;
 
 public class CTRModeRandom extends BufferedRandom {
