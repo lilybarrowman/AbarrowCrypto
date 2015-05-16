@@ -195,9 +195,8 @@ public class CryptoUtils {
 
   public static int[] intArrayFromBytes(int[] result, int intStart, byte[] bytes, int byteStart, int byteLength,
       boolean isLittleEndian) {
-
-    for (int i = 0; i < byteLength / 4; i++) {
-      result[i + intStart] = CryptoUtils.intFromBytes(bytes, byteStart + i * 4, isLittleEndian);
+    for (int i = intStart, max = intStart + byteLength / 4, j = byteStart; i < max; i++, j += 4) {
+      result[i] = CryptoUtils.intFromBytes(bytes, j, isLittleEndian);
     }
 
     return result;
@@ -331,6 +330,14 @@ public class CryptoUtils {
     return bytes;
   }
 
+  public static int[] longArrayToIntArray(long[] input, int[] output) {
+    for (int i = 0, j = 0, end = input.length; i < end; i++, j += 2) {
+      output[j] = (int) (input[i] >>> 32);
+      output[j + 1] = (int) (input[i] & 0xffffffff);
+    }
+    return output;
+  }
+
   public static byte[] longArrayToByteArray(long[] longs) {
     return longArrayToByteArray(longs, false);
   }
@@ -341,8 +348,8 @@ public class CryptoUtils {
 
   public static byte[] longArrayToByteArray(byte[] bytes, int byteStart, long[] longs, int numLongs,
       boolean isLittleEndian) {
-    for (int i = 0; i < numLongs; i++) {
-      longToBytes(longs[i], bytes, byteStart + i * 8, isLittleEndian);
+    for (int i = 0, j = byteStart; i < numLongs; i++, j += 8) {
+      longToBytes(longs[i], bytes, j, isLittleEndian);
     }
     return bytes;
   }
@@ -616,7 +623,7 @@ public class CryptoUtils {
     int count = 0;
     while (out >= 256 && count < 100) {
       int c = out;
-      //find the most significant bit
+      // find the most significant bit
       int j = -1;
       while (c > 0) {
         c = c >>> 1;

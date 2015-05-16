@@ -1,14 +1,11 @@
 package des;
 
 import java.util.Arrays;
-
 import org.apache.commons.lang.ArrayUtils;
-
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
-import core.PairityBitType;
 
-public class TripleDES extends AsymmetricBlockCipher {
+public class TripleDES extends BlockCipher {
   
   private static final int[] KEY_LENGTHS = new int[] {24};
   
@@ -20,13 +17,13 @@ public class TripleDES extends AsymmetricBlockCipher {
   private byte[] temp2;
   
   public TripleDES(byte[] key) {
-    this(key, PairityBitType.NONE);
+    this(key, false);
   }
   
-  public TripleDES(byte[] key, PairityBitType pairityType) {
-    des1 = new DES(ArrayUtils.subarray(key, 0, 8), pairityType);
-    des2 = new DES(ArrayUtils.subarray(key, 8, 16), pairityType);
-    des3 = new DES(ArrayUtils.subarray(key, 16, 24), pairityType);
+  public TripleDES(byte[] key, boolean testPairity) {
+    des1 = new DES(ArrayUtils.subarray(key, 0, 8));
+    des2 = new DES(ArrayUtils.subarray(key, 8, 16));
+    des3 = new DES(ArrayUtils.subarray(key, 16, 24));
     
     temp1=new byte[getBlockBytes()];
     temp2=new byte[getBlockBytes()];

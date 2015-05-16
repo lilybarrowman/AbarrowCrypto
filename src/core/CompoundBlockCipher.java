@@ -1,12 +1,12 @@
 package core;
 
-public class CompoundBlockCipher extends AsymmetricBlockCipher {
+public class CompoundBlockCipher extends BlockCipher {
   
-  private AsymmetricBlockCipher[] ciphers;
+  private BlockCipher[] ciphers;
   
   private int blockBytes;
   
-  public CompoundBlockCipher(AsymmetricBlockCipher[] blockCiphers) {
+  public CompoundBlockCipher(BlockCipher[] blockCiphers) {
     ciphers = blockCiphers;
     
     if (ciphers.length == 0) {

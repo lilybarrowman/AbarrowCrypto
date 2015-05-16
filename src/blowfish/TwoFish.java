@@ -4,10 +4,10 @@ import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
 
-public class TwoFish extends AsymmetricBlockCipher {
+public class TwoFish extends BlockCipher {
 
   public static final int[][] Q_BOX_INDECIES = new int[][] { new int[] { 0, 0, 1, 1 }, new int[] { 0, 1, 1, 0 },
       new int[] { 1, 0, 0, 0 }, new int[] { 1, 1, 0, 1 } };

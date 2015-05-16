@@ -1,6 +1,6 @@
 package core;
 
-public abstract class SymmetricStreamCipher implements Cipher {
+public abstract class StreamCipher implements Cipher {
   
   
   public abstract byte[] codec(byte[] input);

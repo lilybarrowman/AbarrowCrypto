@@ -1,6 +1,6 @@
 package core;
 
-public abstract class AsymmetricBlockCipher implements Cipher {
+public abstract class BlockCipher implements Cipher {
   
   public abstract int getBlockBytes();
     

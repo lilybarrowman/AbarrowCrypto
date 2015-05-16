@@ -29,7 +29,7 @@ public class CompoundBlockCipherTest {
         .encrypt(DatatypeConverter.parseHexBinary("becb3ca9d8a147a664e3b909c3c7d30f")));
 
     assertArrayEquals(DatatypeConverter.parseHexBinary("2a1c632ae42cf9dc54056182197427dd"), new CompoundBlockCipher(
-        new AsymmetricBlockCipher[] { new AES(key), new TwoFish(key), new Serpent(key) }).encrypt(DatatypeConverter
+        new BlockCipher[] { new AES(key), new TwoFish(key), new Serpent(key) }).encrypt(DatatypeConverter
         .parseHexBinary("00112233445566778899aabbccddeeff")));
 
   }

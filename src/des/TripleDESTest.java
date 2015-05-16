@@ -1,18 +1,15 @@
 package des;
 
 import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
-
 import core.CryptoUtils;
-import core.PairityBitType;
 
 public class TripleDESTest {
   
   
   @Test
   public void testTrippleDES() {
-    TripleDES des = new TripleDES("AllYourPasswordsAreWayTooShort".getBytes(), PairityBitType.NONE);
+    TripleDES des = new TripleDES("AllYourPasswordsAreWayTooShort".getBytes(), false);
     String original = "This is a super secret and secure message!";
     byte[] originalBytes = original.getBytes();
     byte[] encrypted = des.encrypt(originalBytes);

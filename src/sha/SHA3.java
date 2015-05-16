@@ -38,6 +38,10 @@ public class SHA3 extends Hasher {
   private int blockBytes;
 
   private SHA3Mode mode;
+  
+  public SHA3(int outputSize) {
+    this(SHA3Mode.SHA3, outputSize);
+  }
 
   public SHA3(SHA3Mode type, int outputSize) {
     mode = type;
@@ -108,7 +112,6 @@ public class SHA3 extends Hasher {
       stateCopy = new long[25];
       C = new long[5];
       stateInts = new int[50];
-      
     }
     return this;
   }
@@ -200,7 +203,6 @@ public class SHA3 extends Hasher {
   protected void hashBlock(byte[] data, int startIndex) {    
     CryptoUtils.xorLongArrayFromBytes(state, 0, data, startIndex, blockBytes / 8, true);
     
-        
     // perform a block permutation
     for (int n = 0; n < 24; n++) {
       
@@ -209,8 +211,7 @@ public class SHA3 extends Hasher {
         C[x] = state[x] ^ state[5 + x] ^ state[10 + x] ^ state[15 + x] ^ state[20 + x];
       }
       
-      CryptoUtils.intArrayFromBytes(stateInts, 0, CryptoUtils.longArrayToByteArray(state), 0, 200, false);
-      
+      CryptoUtils.longArrayToIntArray(state, stateInts);
       
       for (int x = 0; x < 5; x++) {
         int sx =(x + 4) % 5;

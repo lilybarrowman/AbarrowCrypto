@@ -2,10 +2,10 @@ package blowfish;
 
 import org.apache.commons.lang.mutable.MutableInt;
 
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
 
-public class BlowfishCipher extends AsymmetricBlockCipher {
+public class BlowfishCipher extends BlockCipher {
 
   private static final int BLOCK_BYTES = 8;
 

@@ -4,17 +4,17 @@ import java.util.Arrays;
 import java.util.Random;
 
 import core.CryptoUtils;
-import core.SymmetricStreamCipher;
+import core.StreamCipher;
 
-public class RandomSymmetricStreamCipher extends SymmetricStreamCipher {
+public class RandomStreamCipher extends StreamCipher {
   
   private final Random random;
   
-  public RandomSymmetricStreamCipher(Random r) {
+  public RandomStreamCipher(Random r) {
     this(r, 0);
   }
   
-  public RandomSymmetricStreamCipher(Random r, int bytesToDrop) {
+  public RandomStreamCipher(Random r, int bytesToDrop) {
     random = r;
     
     byte[] discard = new byte[bytesToDrop];

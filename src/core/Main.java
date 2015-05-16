@@ -9,6 +9,8 @@ import java.math.BigInteger;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang.ArrayUtils;
+
+import pbkdf2.PBKDF2;
 import des.DES;
 import des.TripleDES;
 import aes.AES;
@@ -18,10 +20,11 @@ import md.MD5;
 import hmac.HMAC;
 import random.HasherRandom;
 import random.RandomVisualizer;
-import random.RandomSymmetricStreamCipher;
+import random.RandomStreamCipher;
 import rc4.RC4Random;
 import sha.SHA1;
 import sha.SHA2_512;
+import sha.SHA3;
 import stenography.StenographyDemo;
 import wavtools.ArraySampleData;
 import wavtools.WavSampleData;
@@ -91,7 +94,6 @@ public class Main {
     }*/
     
     //ChatApp.start();
-    
   }
 
 }

@@ -42,15 +42,16 @@ import javax.swing.SpinnerNumberModel;
 import aes.AES;
 import blowfish.TwoFish;
 import pbkdf2.PBKDF2;
+import random.CTRModeRandom;
+import random.RandomStreamCipher;
 import serpent.Serpent;
 import sha.SHA3;
 import sha.SHA3Mode;
-import core.AsymmetricBlockCipher;
-import core.CTRModeCipher;
+import core.BlockCipher;
 import core.CompoundBlockCipher;
 import core.CryptoUtils;
 import core.Hasher;
-import core.SymmetricStreamCipher;
+import core.StreamCipher;
 
 public class ChatUI implements MouseMotionListener, MouseListener {
 
@@ -73,7 +74,7 @@ public class ChatUI implements MouseMotionListener, MouseListener {
 
   private Hasher h = new SHA3(SHA3Mode.SHA3, 64);
   private HMAC hmac = new HMAC(h);
-  private CTRModeCipher cipher;
+  private StreamCipher cipher;
   // private byte[] rawEntropy = new byte[2];
   private byte[] rawEntropy = new byte[h.getBlockBytes() * 4];
   private byte[] keySalt;
@@ -102,6 +103,8 @@ public class ChatUI implements MouseMotionListener, MouseListener {
   private DateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
   private final String OFFLINE_TITLE = "Abarrow Chat Codec";
+  
+  private CTRModeRandom cipherRandom;
 
   public static void main(String[] args) {
     new ChatUI();
@@ -346,6 +349,8 @@ public class ChatUI implements MouseMotionListener, MouseListener {
       }
       keyIVInputLock.setEnabled(false);
       Thread lockInKeyIV = new Thread() {
+        
+
         @Override
         public void run() {
           byte[] keyIV = null;
@@ -382,8 +387,9 @@ public class ChatUI implements MouseMotionListener, MouseListener {
             CryptoUtils.fillWithZeroes(hashedKey1);
             CryptoUtils.fillWithZeroes(hashedKey2);
 
-            cipher = new CTRModeCipher(new CompoundBlockCipher(new AsymmetricBlockCipher[] { new AES(aesKey),
+            cipherRandom = new CTRModeRandom(new CompoundBlockCipher(new BlockCipher[] { new AES(aesKey),
                 new TwoFish(twoFishKey), new Serpent(serpentKey) }), getNewIV());
+            cipher = new RandomStreamCipher(cipherRandom);
             log("Finished genearting sub keys.");
             encryptButton.setEnabled(true);
             decryptButton.setEnabled(true);
@@ -395,13 +401,18 @@ public class ChatUI implements MouseMotionListener, MouseListener {
       lockInKeyIV.start();
     } else if (event.getComponent().equals(encryptButton)) {
       byte[] iv = getNewIV();
-      cipher.setIV(iv);
-      byte[] plaintext = messageInput.getText().getBytes();
-      byte[] output = cipher.encrypt(plaintext);
-      byte[] mac = hmac.computeHash(key, plaintext);
+      cipherRandom.setIV(iv);
+      byte[] plainText = messageInput.getText().getBytes();
+      byte[] cipherText = cipher.encrypt(plainText);
+      byte[] concat = new byte[iv.length + cipherText.length];
+      System.arraycopy(iv, 0, concat, 0, iv.length);
+      System.arraycopy(cipherText, 0, concat, iv.length, cipherText.length);
+      
+      byte[] mac = hmac.computeHash(key, concat);
+      
       StringBuilder mes = new StringBuilder();
       messageOutput.setText(mes.append(CryptoUtils.byteArrayToHexString(iv)).append(
-          CryptoUtils.byteArrayToHexString(output)).append(CryptoUtils.byteArrayToHexString(mac)).toString());
+          CryptoUtils.byteArrayToHexString(cipherText)).append(CryptoUtils.byteArrayToHexString(mac)).toString());
 
     } else if (event.getComponent().equals(decryptButton)) {
       String messageText = messageInput.getText();
@@ -422,16 +433,22 @@ public class ChatUI implements MouseMotionListener, MouseListener {
         hmacBytes= CryptoUtils.hexStringToBytes(hmacHex);
         cipherText = CryptoUtils.hexStringToBytes(cipherTextHex);
       }catch (IllegalArgumentException e) {
-        log("Invalid key IV. Key IVs must be valid hexadecimal strings.");
+        log("Invalid message. Messages must be valid hexadecimal strings.");
         return;
       }
       
-      cipher.setIV(iv);
-      byte[] plainTextBytes = cipher.decrypt(cipherText);
-      if(!hmac.checkHash(key, plainTextBytes, hmacBytes)){
+      byte[] concat = new byte[iv.length + cipherText.length];
+      System.arraycopy(iv, 0, concat, 0, iv.length);
+      System.arraycopy(cipherText, 0, concat, iv.length, cipherText.length);
+      
+      if(!hmac.checkHash(key, concat, hmacBytes)){
         log("Incomplete or invalid message, HMAC failed.");
         return;
       }
+      
+      cipherRandom.setIV(iv);
+      byte[] plainTextBytes = cipher.decrypt(cipherText);
+      
       messageOutput.setText(new String(plainTextBytes));
     }
   }

@@ -1,9 +1,9 @@
 package aes;
 
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
 
-public class AES extends AsymmetricBlockCipher {
+public class AES extends BlockCipher {
 
   private static int STATE_COLUMNS = 4;
   

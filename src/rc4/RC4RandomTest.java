@@ -2,7 +2,7 @@ package rc4;
 
 import org.junit.Test;
 
-import random.RandomSymmetricStreamCipher;
+import random.RandomStreamCipher;
 import core.CryptoUtils;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -25,8 +25,8 @@ public class RC4RandomTest {
   public void testExample(String keyString, String input, String expectedEncoding, int drop) {
     byte[] key = keyString.getBytes();
     byte[] original =  input.getBytes();
-    byte[] encoded = (new RandomSymmetricStreamCipher(new RC4Random(key), drop)).codec(original);
-    byte[] decoded = (new RandomSymmetricStreamCipher(new RC4Random(key), drop)).codec(encoded);
+    byte[] encoded = (new RandomStreamCipher(new RC4Random(key), drop)).codec(original);
+    byte[] decoded = (new RandomStreamCipher(new RC4Random(key), drop)).codec(encoded);
     
     assertArrayEquals(original, decoded);
     assertEquals(expectedEncoding, CryptoUtils.byteArrayToHexString(encoded));

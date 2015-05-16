@@ -1,9 +1,9 @@
 package serpent;
 
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
 
-public class Serpent extends AsymmetricBlockCipher {
+public class Serpent extends BlockCipher {
 
   private static final int BLOCK_BYTES = 16;
 

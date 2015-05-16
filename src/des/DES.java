@@ -4,12 +4,10 @@ import java.util.Arrays;
 
 import org.apache.commons.lang.mutable.MutableInt;
 
-import core.AsymmetricBlockCipher;
+import core.BlockCipher;
 import core.CryptoUtils;
-import core.PairityBitCodec;
-import core.PairityBitType;
 
-public class DES extends AsymmetricBlockCipher {
+public class DES extends BlockCipher {
 
   public static final int ROUNDS = 16;
   private static final int BLOCK_BITS = 64;
@@ -83,16 +81,7 @@ public class DES extends AsymmetricBlockCipher {
   
   private byte[] premutated;
   
-
   public DES(byte[] key) {
-    this(key, PairityBitType.NONE);
-  }
-  
-  public DES(byte[] key, PairityBitType pairityType) {
-
-    if (!PairityBitCodec.verifyPairity(key, pairityType)) {
-      throw new IllegalArgumentException("DES key failed pairity check!");
-    }
 
     premutated = new byte[DES.BLOCK_BYTES];
     subKeys = new long[DES.ROUNDS];
