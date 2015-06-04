@@ -1,4 +1,4 @@
-package hmac;
+package mac.hmac;
 
 import hash.Hasher;
 import java.util.Arrays;
@@ -65,6 +65,7 @@ public class HMAC {
     return out;
   }
   public boolean checkHash(byte[] key, byte[] message, byte[] hmac) {
+    //TODO: Fix vulnerable to timing attacks
     return Arrays.equals(computeHash(key, message), hmac);
   }
 

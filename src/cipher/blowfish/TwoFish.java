@@ -1,10 +1,8 @@
 package cipher.blowfish;
 
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import cipher.BlockCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class TwoFish extends BlockCipher {
@@ -44,8 +42,6 @@ public class TwoFish extends BlockCipher {
           0xA2, 0x0D, 0x52, 0xBB, 0x02, 0x2F, 0xA9, 0xD7, 0x61, 0x1E, 0xB4, 0x50, 0x04, 0xF6, 0xC2, 0x16, 0x25, 0x86,
           0x56, 0x55, 0x09, 0xBE, 0x91 } };
 
-  public static final int[] KEY_LENGTHS = new int[] { 16, 24, 32 };
-
   private static final int BLOCK_BYTES = 16;
 
   private static final int ROUNDS = 16;
@@ -54,17 +50,11 @@ public class TwoFish extends BlockCipher {
 
   private int[] S;
 
+  public TwoFish() {
+  }
+  
   public TwoFish(byte[] key) {
-
-    int keyLength = key.length;
-
-    // or pad the key with 0s
-    if (ArrayUtils.indexOf(KEY_LENGTHS, keyLength) == -1) {
-      throw new IllegalArgumentException("The supplied key is not a valid length.");
-    }
-    
-    S = createSBoxes(key);
-    roundKeys = expandRoundKeys(key);
+    setKey(key);
   }
   
   
@@ -159,10 +149,6 @@ public class TwoFish extends BlockCipher {
     return TwoFish.BLOCK_BYTES;
   }
 
-  public int[] getValidKeyLengths() {
-    return TwoFish.KEY_LENGTHS;
-  }
-
   private int g(int x) {
     return h(x, S);
   }
@@ -219,7 +205,10 @@ public class TwoFish extends BlockCipher {
   }
 
   @Override
-  public void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
+  public byte[] encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
     int[] block = new int[] { CryptoUtils.intFromBytes(input, srcPos, true) ^ roundKeys[0],
         CryptoUtils.intFromBytes(input, srcPos + 4, true) ^ roundKeys[1],
         CryptoUtils.intFromBytes(input, srcPos + 8, true) ^ roundKeys[2],
@@ -234,11 +223,14 @@ public class TwoFish extends BlockCipher {
     CryptoUtils.intToBytes(block[3] ^ roundKeys[5], output, destPos + 4, true);
     CryptoUtils.intToBytes(block[0] ^ roundKeys[6], output, destPos + 8, true);
     CryptoUtils.intToBytes(block[1] ^ roundKeys[7], output, destPos + 12, true);
-
+    return output;
   }
 
   @Override
-  public void decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
+  public byte[] decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
     int[] block = new int[] { CryptoUtils.intFromBytes(input, srcPos + 8, true) ^ roundKeys[6],
         CryptoUtils.intFromBytes(input, srcPos + 12, true) ^ roundKeys[7],
         CryptoUtils.intFromBytes(input, srcPos, true) ^ roundKeys[4],
@@ -253,7 +245,34 @@ public class TwoFish extends BlockCipher {
     CryptoUtils.intToBytes(block[1] ^ roundKeys[1], output, destPos + 4, true);
     CryptoUtils.intToBytes(block[2] ^ roundKeys[2], output, destPos + 8, true);
     CryptoUtils.intToBytes(block[3] ^ roundKeys[3], output, destPos + 12, true);
+    return output;
+  }
 
+
+  @Override
+  public void removeKey() {
+    if (!hasKey()) {
+      return;
+    }
+    CryptoUtils.fillWithZeroes(S);
+    CryptoUtils.fillWithZeroes(roundKeys);
+    S = null;
+    roundKeys = null;
+  }
+
+
+  @Override
+  public void setKey(byte[] key) {
+    if (key.length != 32) {
+      Arrays.copyOf(key, 32);
+    }
+    S = createSBoxes(key);
+    roundKeys = expandRoundKeys(key);
+  }
+
+  @Override
+  public boolean hasKey() {
+    return roundKeys != null;
   }
 
 }

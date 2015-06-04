@@ -7,6 +7,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.junit.Test;
 
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class AESTest {
@@ -44,34 +45,34 @@ public class AESTest {
   }
 
   @Test
-  public void testEncoding() {
+  public void testEncoding() throws CryptoException {
 
     assertArrayEquals(DatatypeConverter.parseHexBinary("3925841d02dc09fbdc118597196a0b32"), new AES(DatatypeConverter
-        .parseHexBinary("2b7e151628aed2a6abf7158809cf4f3c")).encrypt(DatatypeConverter
+        .parseHexBinary("2b7e151628aed2a6abf7158809cf4f3c")).encryptBlock(DatatypeConverter
         .parseHexBinary("3243f6a8885a308d313198a2e0370734")));
+    assertArrayEquals(DatatypeConverter.parseHexBinary("3243f6a8885a308d313198a2e0370734"), new AES(DatatypeConverter
+        .parseHexBinary("2b7e151628aed2a6abf7158809cf4f3c")).decryptBlock(DatatypeConverter
+        .parseHexBinary("3925841d02dc09fbdc118597196a0b32")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("69c4e0d86a7b0430d8cdb78070b4c55a"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f")).encrypt(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f")).encryptBlock(DatatypeConverter
         .parseHexBinary("00112233445566778899aabbccddeeff")));
-    
     assertArrayEquals(DatatypeConverter.parseHexBinary("00112233445566778899aabbccddeeff"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f")).decrypt(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f")).decryptBlock(DatatypeConverter
         .parseHexBinary("69c4e0d86a7b0430d8cdb78070b4c55a")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("dda97ca4864cdfe06eaf70a0ec0d7191"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f1011121314151617")).encrypt(DatatypeConverter
-        .parseHexBinary("00112233445566778899aabbccddeeff")));
-    
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f1011121314151617")).encryptBlock(DatatypeConverter
+        .parseHexBinary("00112233445566778899aabbccddeeff")));    
     assertArrayEquals(DatatypeConverter.parseHexBinary("00112233445566778899aabbccddeeff"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f1011121314151617")).decrypt(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f1011121314151617")).decryptBlock(DatatypeConverter
         .parseHexBinary("dda97ca4864cdfe06eaf70a0ec0d7191")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("8ea2b7ca516745bfeafc49904b496089"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).encrypt(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).encryptBlock(DatatypeConverter
         .parseHexBinary("00112233445566778899aabbccddeeff")));
-    
     assertArrayEquals(DatatypeConverter.parseHexBinary("00112233445566778899aabbccddeeff"), new AES(DatatypeConverter
-        .parseHexBinary("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).decrypt(DatatypeConverter
+        .parseHexBinary("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")).decryptBlock(DatatypeConverter
         .parseHexBinary("8ea2b7ca516745bfeafc49904b496089")));
   }
 

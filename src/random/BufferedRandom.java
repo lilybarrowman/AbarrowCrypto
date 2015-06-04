@@ -53,19 +53,24 @@ public abstract class BufferedRandom extends Random {
       }
       
       //copy bytes from the random data to the byte array
-      int bytesCopied = Math.min(bytesLeft, bytes.length - byteIndex);
-      System.arraycopy(randomData, 0, bytes, byteIndex, bytesCopied); 
+      int maxCopy = bytes.length - byteIndex;
+      int bytesCopied = (bytesLeft < maxCopy) ? bytesLeft : maxCopy;
+      System.arraycopy(randomData, randomDataIndex, bytes, byteIndex, bytesCopied); 
       byteIndex += bytesCopied;
       
       //now we have that much less random data to work with
-      Arrays.fill(randomData, randomDataIndex, randomDataIndex + bytesCopied, CryptoUtils.ZERO_BYTE);
       randomDataIndex += bytesCopied;
+    }
+    if (randomDataIndex != -1) {
+          Arrays.fill(randomData, 0, randomDataIndex, CryptoUtils.ZERO_BYTE);
     }
   }
   
   public final void clearBuffer() {
-    CryptoUtils.fillWithZeroes(randomData);
-    randomDataIndex = -1;
+    if (randomDataIndex != -1) {
+      CryptoUtils.fillWithZeroes(randomData);
+      randomDataIndex = -1;
+    }
   }
   
   protected abstract void generateMoreBytes(byte[] data);

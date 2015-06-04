@@ -2,7 +2,7 @@ package pbkdf2;
 
 import static org.junit.Assert.assertEquals;
 import hash.sha.SHA1;
-import hmac.HMAC;
+import mac.hmac.HMAC;
 
 import org.junit.Test;
 

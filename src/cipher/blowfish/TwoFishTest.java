@@ -6,6 +6,8 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.junit.Test;
 
+import core.CryptoException;
+
 public class TwoFishTest {
 
   @Test
@@ -50,51 +52,51 @@ public class TwoFishTest {
   }
 
   @Test
-  public void testEncryption() {
+  public void testencryptBlockion() throws CryptoException {
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("9F589F5CF6122C32B6BFEC2F2AE8C35A"), new TwoFish(
         DatatypeConverter.parseHexBinary("00000000000000000000000000000000"))
-        .encrypt(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
+        .encryptBlock(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("CFD1D2E5A9BE9CDF501F13B892BD2248"), new TwoFish(
         DatatypeConverter.parseHexBinary("0123456789ABCDEFFEDCBA98765432100011223344556677"))
-        .encrypt(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
+        .encryptBlock(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("37527BE0052334B89F0CFCCAE87CFA20"), new TwoFish(
         DatatypeConverter.parseHexBinary("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF"))
-        .encrypt(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
+        .encryptBlock(DatatypeConverter.parseHexBinary("00000000000000000000000000000000")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("6CB4561C40BF0A9705931CB6D408E7FA"), new TwoFish(
         DatatypeConverter.parseHexBinary("D43BB7556EA32E46F2A282B7D45B4E0D57FF739D4DC92C1BD7FC01700CC8216F"))
-        .encrypt(DatatypeConverter.parseHexBinary("90AFE91BB288544F2C32DC239B2635E6")));
+        .encryptBlock(DatatypeConverter.parseHexBinary("90AFE91BB288544F2C32DC239B2635E6")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("E69465770505D7F80EF68CA38AB3A3D6"), new TwoFish(
         DatatypeConverter.parseHexBinary("6CB4561C40BF0A9705931CB6D408E7FA90AFE91BB288544F2C32DC239B2635E6"))
-        .encrypt(DatatypeConverter.parseHexBinary("3059D6D61753B958D92F4781C8640E58")));
+        .encryptBlock(DatatypeConverter.parseHexBinary("3059D6D61753B958D92F4781C8640E58")));
   }
   
   @Test
-  public void testDecryption() {
+  public void testdecryptBlockion() throws CryptoException {
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("00000000000000000000000000000000"), new TwoFish(
         DatatypeConverter.parseHexBinary("00000000000000000000000000000000"))
-        .decrypt(DatatypeConverter.parseHexBinary("9F589F5CF6122C32B6BFEC2F2AE8C35A")));
+        .decryptBlock(DatatypeConverter.parseHexBinary("9F589F5CF6122C32B6BFEC2F2AE8C35A")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("00000000000000000000000000000000"), new TwoFish(
         DatatypeConverter.parseHexBinary("0123456789ABCDEFFEDCBA98765432100011223344556677"))
-        .decrypt(DatatypeConverter.parseHexBinary("CFD1D2E5A9BE9CDF501F13B892BD2248")));
+        .decryptBlock(DatatypeConverter.parseHexBinary("CFD1D2E5A9BE9CDF501F13B892BD2248")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("00000000000000000000000000000000"), new TwoFish(
         DatatypeConverter.parseHexBinary("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF"))
-        .decrypt(DatatypeConverter.parseHexBinary("37527BE0052334B89F0CFCCAE87CFA20")));
+        .decryptBlock(DatatypeConverter.parseHexBinary("37527BE0052334B89F0CFCCAE87CFA20")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("90AFE91BB288544F2C32DC239B2635E6"), new TwoFish(
         DatatypeConverter.parseHexBinary("D43BB7556EA32E46F2A282B7D45B4E0D57FF739D4DC92C1BD7FC01700CC8216F"))
-        .decrypt(DatatypeConverter.parseHexBinary("6CB4561C40BF0A9705931CB6D408E7FA")));
+        .decryptBlock(DatatypeConverter.parseHexBinary("6CB4561C40BF0A9705931CB6D408E7FA")));
     
     assertArrayEquals(DatatypeConverter.parseHexBinary("3059D6D61753B958D92F4781C8640E58"), new TwoFish(
         DatatypeConverter.parseHexBinary("6CB4561C40BF0A9705931CB6D408E7FA90AFE91BB288544F2C32DC239B2635E6"))
-        .decrypt(DatatypeConverter.parseHexBinary("E69465770505D7F80EF68CA38AB3A3D6")));
+        .decryptBlock(DatatypeConverter.parseHexBinary("E69465770505D7F80EF68CA38AB3A3D6")));
   }
 
 }

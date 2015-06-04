@@ -1,8 +1,7 @@
 package cipher.blowfish;
 
-import org.apache.commons.lang.mutable.MutableInt;
-
 import cipher.BlockCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class BlowfishCipher extends BlockCipher {
@@ -148,16 +147,143 @@ public class BlowfishCipher extends BlockCipher {
 
   protected int[] P;
   protected int[] S;
+  
+  public BlowfishCipher() {
+    
+  }
 
-  public static byte pad1;
-  public static byte pad2;
 
   public BlowfishCipher(byte[] key) {
-    this(key, BlowfishCipher.NO_SALT, -1);
+    setKey(key);
   }
 
   public BlowfishCipher(byte[] key, byte[] salt, int cost) {
+    setKey(key, salt, cost);
+  }
 
+  private void expandKey(byte[] key, byte[] salt) {
+    int[] loopPos = new int[]{0};
+    for (int i = 0; i < BlowfishCipher.P_SIZE; i++) {
+      P[i] ^= CryptoUtils.circularlyExtractIntFromBytes(key, loopPos);
+    }
+    
+    loopPos[0] = 0;
+    
+    int[] LR = new int[2];
+    
+    for (int i = 0 ; i < BlowfishCipher.P_SIZE; i += 2) {
+      LR[0] = LR[0] ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos);
+      LR[1] = LR[1] ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos);
+      encryptBlock(LR);
+      P[i] = LR[0];
+      P[i + 1] = LR[1];
+    }
+        
+    for (int j = 0; j < BlowfishCipher.S_SIZE; j += 2) {        
+      LR[0] = LR[0] ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos);
+      LR[1] = LR[1] ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos);
+      encryptBlock(LR);
+      S[j] = LR[0];
+      S[j + 1] = LR[1];
+    }
+  }
+  
+  
+  public void encryptBlock(int[] LR) {
+    int L = LR[0];
+    int R = LR[1];
+
+    for (int i = 0; i < BlowfishCipher.ROUNDS; i += 2) {
+      L ^= P[i];
+      R ^= f(L);
+      R ^= P[i + 1];
+      L ^= f(R);
+    }
+
+    L ^= P[16];
+    R ^= P[17];
+
+    LR[0] = R;
+    LR[1] = L;
+  }
+
+  @Override
+  public byte[] encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    int[] LR = CryptoUtils.intArrayFromBytes(input, srcPos, 8);
+
+    encryptBlock(LR);
+
+    CryptoUtils.intToBytes(LR[0], output, destPos);
+    CryptoUtils.intToBytes(LR[1], output, destPos + 4);
+    return output;
+  }
+
+  public void decryptBlock(int[] LR) {
+    int L = LR[0];
+    int R = LR[1];
+    
+    for (int i = BlowfishCipher.ROUNDS; i > 0; i -= 2) {
+      L ^= P[i + 1];
+      R ^= f(L);
+      R ^= P[i];
+      L ^= f(R);
+    }
+
+    L ^= P[1];
+    R ^= P[0];
+    
+    LR[0] = R;
+    LR[1] = L;
+  }
+
+  @Override
+  public byte[] decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    int[] LR = CryptoUtils.intArrayFromBytes(input, srcPos, 8);
+
+    decryptBlock(LR);
+
+    CryptoUtils.intToBytes(LR[0], output, destPos);
+    CryptoUtils.intToBytes(LR[1], output, destPos + 4);
+    return output;
+  }
+
+  private int f(int x) {
+    int h = S[x >>> 24] + S[BlowfishCipher.S_SUB_SIZE + ((x >>> 16) & 0xff)];
+    return (h ^ S[BlowfishCipher.S_SUB_SIZE * 2 + ((x >>> 8) & 0xff)]) + S[BlowfishCipher.S_SUB_SIZE * 3 + (x & 0xff)];
+  }
+
+  @Override
+  public int getBlockBytes() {
+    return BLOCK_BYTES;
+  }
+
+  public int[] getValidKeyLengths() {
+    return BlowfishCipher.KEY_LENGTHS;
+  }
+
+  @Override
+  public void removeKey() {
+    if (!hasKey()) {
+      return;
+    }
+    CryptoUtils.fillWithZeroes(P);
+    CryptoUtils.fillWithZeroes(S);
+    P = null;
+    S = null;
+  }
+
+  @Override
+  public void setKey(byte[] key) {
+    setKey(key, BlowfishCipher.NO_SALT, -1);
+  }
+  
+  public void setKey(byte[] key, byte[] salt, int cost) {
     P = new int[BlowfishCipher.P_SIZE];
     S = new int[BlowfishCipher.S_SIZE];
 
@@ -179,108 +305,10 @@ public class BlowfishCipher extends BlockCipher {
     }
   }
 
-  private void expandKey(byte[] key, byte[] salt) {
-    
-    MutableInt loopPos = new MutableInt(0);
-    for (int i = 0; i < BlowfishCipher.P_SIZE; i++) {
-      P[i] ^= CryptoUtils.circularlyExtractIntFromBytes(key, loopPos);
-    }
-    
-    loopPos.setValue(0);
-    
-    MutableInt L = new MutableInt(0);
-    MutableInt R = new MutableInt(0);
-    
-    for (int i = 0 ; i < BlowfishCipher.P_SIZE; i += 2) {
-      L.setValue(L.intValue() ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos));
-      R.setValue(R.intValue() ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos));
-      encryptBlock(L, R);
-      P[i] = L.intValue();
-      P[i + 1] = R.intValue();
-    }
-        
-    for (int j = 0; j < BlowfishCipher.S_SIZE; j += 2) {        
-      L.setValue(L.intValue() ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos));
-      R.setValue(R.intValue() ^ CryptoUtils.circularlyExtractIntFromBytes(salt, loopPos));
-      encryptBlock(L, R);
-      S[j] = L.intValue();
-      S[j + 1] = R.intValue();
-    }
-  }
-  
-  
-  public void encryptBlock(MutableInt lRef, MutableInt rRef) {
-    
-    int L = lRef.intValue();
-    int R = rRef.intValue();
-
-    for (int i = 0; i < BlowfishCipher.ROUNDS; i += 2) {
-      L ^= P[i];
-      R ^= f(L);
-      R ^= P[i + 1];
-      L ^= f(R);
-    }
-
-    L ^= P[16];
-    R ^= P[17];
-
-    lRef.setValue(R);
-    rRef.setValue(L);
-  }
 
   @Override
-  public void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    MutableInt L = new MutableInt(CryptoUtils.intFromBytes(input, srcPos));
-    MutableInt R = new MutableInt(CryptoUtils.intFromBytes(input, srcPos + 4));
-
-    encryptBlock(L, R);
-
-    CryptoUtils.intToBytes(L.intValue(), output, destPos);
-    CryptoUtils.intToBytes(R.intValue(), output, destPos + 4);
-  }
-
-  public void decryptBlock(MutableInt lRef, MutableInt rRef) {
-    int L = lRef.intValue();
-    int R = rRef.intValue();
-    
-    for (int i = BlowfishCipher.ROUNDS; i > 0; i -= 2) {
-      L ^= P[i + 1];
-      R ^= f(L);
-      R ^= P[i];
-      L ^= f(R);
-    }
-
-    L ^= P[1];
-    R ^= P[0];
-    
-    lRef.setValue(R);
-    rRef.setValue(L);
-  }
-
-  @Override
-  public void decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    MutableInt L = new MutableInt(CryptoUtils.intFromBytes(input, srcPos));
-    MutableInt R = new MutableInt(CryptoUtils.intFromBytes(input, srcPos + 4));
-
-    decryptBlock(L, R);
-
-    CryptoUtils.intToBytes(L.intValue(), output, destPos);
-    CryptoUtils.intToBytes(R.intValue(), output, destPos + 4);
-
-  }
-
-  private int f(int x) {
-    int h = S[x >>> 24] + S[BlowfishCipher.S_SUB_SIZE + ((x >>> 16) & 0xff)];
-    return (h ^ S[BlowfishCipher.S_SUB_SIZE * 2 + ((x >>> 8) & 0xff)]) + S[BlowfishCipher.S_SUB_SIZE * 3 + (x & 0xff)];
-  }
-
-  @Override
-  public int getBlockBytes() {
-    return BLOCK_BYTES;
-  }
-
-  public int[] getValidKeyLengths() {
-    return BlowfishCipher.KEY_LENGTHS;
+  public boolean hasKey() {
+    return S != null;
   }
 
 }

@@ -2,7 +2,7 @@ package pbkdf2;
 
 import java.util.Arrays;
 
-import hmac.HMAC;
+import mac.hmac.HMAC;
 import core.CryptoUtils;
 
 public class PBKDF2 {

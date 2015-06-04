@@ -13,11 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeMap;
-
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -30,10 +25,13 @@ import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 
+import padding.PKCS7;
 import cipher.Cipher;
-import cipher.CipherMaker;
-import cipher.des.TripleDES;
+import cipher.PaddedCipher;
+import cipher.aes.AES;
+import cipher.mode.ECBMode;
 import wavtools.WavSampleData;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class StenographyDemo implements ActionListener {
@@ -62,11 +60,7 @@ public class StenographyDemo implements ActionListener {
   private JRadioButton wavMaskButton;
   
   private JCheckBox trippleDesCheckBox;
-  private JCheckBox aesCheckBox;
-
-  private TreeMap<JCheckBox, CipherMaker> ciphers;
-  private List<JCheckBox> cipherCheckBoxOrder;
-  
+  private JCheckBox aesCheckBox;  
   private PNGStenographer pngStenographer;
   private WAVStenographer wavStenographer;
 
@@ -102,17 +96,7 @@ public class StenographyDemo implements ActionListener {
     
     trippleDesCheckBox = new JCheckBox("3DES", true);
     aesCheckBox = new JCheckBox("AES", false);
-    
-    
-    cipherCheckBoxOrder = new ArrayList<JCheckBox>();
-    
-    ciphers = new TreeMap<JCheckBox, CipherMaker>(new Comparator<JCheckBox>(){
-      @Override
-      public int compare(JCheckBox a, JCheckBox b) {
-        return (cipherCheckBoxOrder.indexOf(a) > cipherCheckBoxOrder.indexOf(b)) ? 1 : -1;
-      }
-    });
-    
+        
     Container contents = frame.getContentPane();
     contents.setLayout(new BoxLayout(contents, BoxLayout.Y_AXIS));
 
@@ -234,8 +218,14 @@ public class StenographyDemo implements ActionListener {
         statusLabel.setText("Error reading stenographic file.");
       }
 
-      TripleDES cipher = new TripleDES(getPaddedPassword());
-      byte[] decoded = cipher.decrypt(stenData.bytes);
+      Cipher cipher = new PaddedCipher(new ECBMode(new AES(getPaddedPassword())), new PKCS7());
+      byte[] decoded;
+      try {
+        decoded = cipher.decrypt(stenData.bytes);
+      } catch (CryptoException e1) {
+        statusLabel.setText(e1.getMessage());
+        return;
+      }
 
       FileOutputStream outStream;
       try {
@@ -283,8 +273,14 @@ public class StenographyDemo implements ActionListener {
         } else if (fileChooserState.equals("ChoosingDest")) {
           File outputFile = fileChooser.getSelectedFile();
 
-          TripleDES cipher = new TripleDES(getPaddedPassword());
-          byte[] encoded = cipher.encrypt(source);
+          Cipher cipher = new PaddedCipher(new ECBMode(new AES(getPaddedPassword())), new PKCS7());
+          byte[] encoded = null;
+          try{
+            encoded = cipher.encrypt(source);
+          } catch (CryptoException e1) {
+            statusLabel.setText(e1.getMessage());
+            return;
+          }
 
           try {
             if (isUsingImageMask()) {
@@ -304,7 +300,7 @@ public class StenographyDemo implements ActionListener {
 
   public byte[] getPaddedPassword() {
     char[] password = passwordInput.getPassword();
-    byte[] paddedPassword = new byte[24];
+    byte[] paddedPassword = new byte[32];
     return CryptoUtils.utf8CharArrayToByteAray(password, paddedPassword);
   }
 

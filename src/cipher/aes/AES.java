@@ -1,6 +1,9 @@
 package cipher.aes;
 
+import java.util.Arrays;
+
 import cipher.BlockCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class AES extends BlockCipher {
@@ -48,14 +51,13 @@ public class AES extends BlockCipher {
 
   private int numberOfRounds; // number of rounds
 
-  private int[] state;
-
-  public AES(byte[] aesKey) {
-    numberOfRounds = getNumberOfRounds(aesKey.length);
-    state = new int[AES.STATE_COLUMNS];
-    roundKeys = expandRoundKeys(aesKey);
+  public AES() {
+    
   }
   
+  public AES(byte[] aesKey) {
+    setKey(aesKey);
+  }
   
   private static int getNumberOfRounds(int keyBytes) {
     if (keyBytes == 16) {
@@ -100,37 +102,37 @@ public class AES extends BlockCipher {
     return expandedRoundKeys;
   }
 
-  private void addRoundKey(int offSet) {
+  private void addRoundKey(int[] state, int offSet) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] ^= roundKeys[offSet + xn];
     }
   }
 
-  private void inverseSubBytes() {
+  private void inverseSubBytes(int[] state) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] = subWord(state[xn], AES.INVERSE_S_BOX_MAP);
     }
   }
 
-  private void subBytes() {
+  private void subBytes(int[] state) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] = subWord(state[xn], AES.S_BOX_MAP);
     }
   }
 
-  private void inverseMixColumns() {
+  private void inverseMixColumns(int[] state) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] = multiplyInts(0x0b0d090e, state[xn]);
     }
   }
 
-  private void mixColumns() {
+  private void mixColumns(int[] state) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] = multiplyInts(0x03010102, state[xn]);
     }
   }
 
-  private void inverseShiftRows() {
+  private void inverseShiftRows(int[] state) {
     int a = state[0];
     int b = state[1];
     int c = state[2];
@@ -142,7 +144,7 @@ public class AES extends BlockCipher {
     state[3] = (a & 0xff000000) + (b & 0xff0000) + (c & 0xff00) + (d & 0xff);
   }
 
-  private void shiftRows() {
+  private void shiftRows(int[] state) {
     int a = state[0];
     int b = state[1];
     int c = state[2];
@@ -193,13 +195,13 @@ public class AES extends BlockCipher {
     return 16;
   }
 
-  private void copyStateFromByteArray(byte[] input, int srcPos) {
+  private void copyStateFromByteArray(int[] state, byte[] input, int srcPos) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       state[xn] = CryptoUtils.intFromBytes(input, srcPos + 4 * xn, true);
     }
   }
 
-  private void copyStateToByteArray(byte[] output, int destPos) {
+  private void copyStateToByteArray(int[] state, byte[] output, int destPos) {
     for (int xn = 0; xn < AES.STATE_COLUMNS; xn++) {
       CryptoUtils.intToBytes(state[xn], output, destPos + 4 * xn, true);
       // clean up the state
@@ -207,70 +209,91 @@ public class AES extends BlockCipher {
     }
   }
   
-  /*private void outputIntArray(int[] arr, String context) {
-    outputIntArray(arr, 0, context);
-  }
-  
-  private static void outputIntArray(int[] arr, int offset, String context) {
-    System.out.println(context);
-    for (int yn = 0; yn < 4; yn ++) {
-      int shift = yn * 8;
-      int a = (arr[offset] >>> shift) & 0xff;
-      int b = (arr[offset + 1] >>> shift) & 0xff;
-      int c = (arr[offset + 2] >>> shift) & 0xff;
-      int d = (arr[offset + 3] >>> shift) & 0xff;
-      
-      int row = (a << 24) + (b << 16) + (c << 8) + d;
-      
-      System.out.println(CryptoUtils.byteArrayToHexString(CryptoUtils.intArrayToByteArray(new int[]{row})));
-    }
-  }*/
-
   @Override
-  public void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    copyStateFromByteArray(input, srcPos);
-    // do something with round keys nR times and do it in a special way the last
-    // time
+  public byte[] encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    int[] state = new int[AES.STATE_COLUMNS];
+    copyStateFromByteArray(state, input, srcPos);
     
-    addRoundKey(0);
-   
+    addRoundKey(state, 0);
 
     for (int round = 1; round < numberOfRounds; round++) {
-      subBytes();
-      shiftRows();
-      mixColumns();
-      addRoundKey(AES.STATE_COLUMNS * round);
+      subBytes(state);
+      shiftRows(state);
+      mixColumns(state);
+      addRoundKey(state, AES.STATE_COLUMNS * round);
     }
 
-    subBytes();
-    shiftRows();
-    addRoundKey(AES.STATE_COLUMNS * numberOfRounds);
+    subBytes(state);
+    shiftRows(state);
+    addRoundKey(state, AES.STATE_COLUMNS * numberOfRounds);
     
-    copyStateToByteArray(output, destPos);
+    copyStateToByteArray(state, output, destPos);
+    return output;
   }
 
   @Override
-  public void decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    copyStateFromByteArray(input, srcPos);
-
-    addRoundKey(AES.STATE_COLUMNS * numberOfRounds);
+  public byte[] decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    int[] state = new int[AES.STATE_COLUMNS];
+    copyStateFromByteArray(state, input, srcPos);
+    
+    addRoundKey(state, AES.STATE_COLUMNS * numberOfRounds);
 
     for (int round = numberOfRounds - 1; round >= 1; round--) {
-      inverseShiftRows();
-      inverseSubBytes();
-      addRoundKey(AES.STATE_COLUMNS * round);
-      inverseMixColumns();
+      inverseShiftRows(state);
+      inverseSubBytes(state);
+      addRoundKey(state, AES.STATE_COLUMNS * round);
+      inverseMixColumns(state);
     }
 
-    inverseShiftRows();
-    inverseSubBytes();
-    addRoundKey(0);
+    inverseShiftRows(state);
+    inverseSubBytes(state);
+    addRoundKey(state, 0);
 
-    copyStateToByteArray(output, destPos);
+    copyStateToByteArray(state, output, destPos);
+    return output;
   }
 
   public int[] getValidKeyLengths() {
     return AES.KEY_LENGTHS;
+  }
+
+
+  @Override
+  public void removeKey() {
+    if (!hasKey()){
+      return;
+    }
+    CryptoUtils.fillWithZeroes(roundKeys);
+    roundKeys = null;
+  }
+
+
+  @Override
+  public void setKey(byte[] key) {
+    byte[] aesKey = null;
+    if (key.length == 32 || key.length == 24 || key.length == 16) {
+      aesKey = key;
+    } else if (key.length > 24) {
+      aesKey = Arrays.copyOf(key, 32);
+    } else if (key.length > 16) {
+      aesKey = Arrays.copyOf(key, 24);
+    } else {
+      aesKey = Arrays.copyOf(key, 16);
+    }
+    
+    numberOfRounds = getNumberOfRounds(aesKey.length);
+    roundKeys = expandRoundKeys(aesKey);
+  }
+
+  @Override
+  public boolean hasKey() {
+    return roundKeys != null;
   }
 
 }

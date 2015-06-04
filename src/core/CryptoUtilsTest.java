@@ -129,5 +129,23 @@ public class CryptoUtilsTest {
       (byte)0xec
     });
   }
+  
+  @Test
+  public void multiplyFiniteFieldsModifyingInputs() {
+    byte[] a = new byte[1];
+    a[0] = (byte)0xea; //0x57
+    byte[] b = new byte[1];
+    b[0] = (byte)0xc1; //0x83
+    byte[] p = new byte[1];
+    byte[] truncFundPoly = new byte[1];
+    truncFundPoly[0] = (byte)0xd8; //0x1b
+    
+    byte[] expectedP = new byte[1];
+    expectedP[0] = (byte)0x83; //0xc1
+    
+    byte[] result = CryptoUtils.multiplyFiniteFieldsModifyingInputs(a, b, p, truncFundPoly);
+    
+    assertArrayEquals(expectedP, result);
+  }
 
 }

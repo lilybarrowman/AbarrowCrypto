@@ -1,92 +1,50 @@
 package cipher.blowfish;
 
-import hash.Hasher;
-
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.mutable.MutableInt;
-
 import base64.Base64Codec;
-import random.RandomKeyMaker;
 import core.CryptoUtils;
 
-public class Bcrypt extends Hasher {
+public class Bcrypt {
   
-  private byte[] salt;
-  private int rounds;
-  
-  private byte[] bytesToHash;
-  
-  private boolean isV2Y;
-  
-  public Bcrypt() {
-    this(RandomKeyMaker.makeKey(16), 10);
-  }
-
-  
-  public Bcrypt(byte[] hashSalt, int hashRounds) {
-    this(hashSalt, hashRounds, true);
-  }
-  
-  public Bcrypt(byte[] hashSalt, int hashRounds, boolean isUsingV2Y) {
-
-    salt = hashSalt;
-    rounds = hashRounds;
-    bytesToHash = new byte[]{};
-    isV2Y = isUsingV2Y;
-  }
-
-  @Override
-  public Hasher addBytes(byte[] bytes) {
-    byte[] bigger = new byte[bytesToHash.length + bytes.length];
+  public static byte[] computeHash(int rounds, byte[] salt, byte[] bytesToHash) {  
+    byte[] bytes = Arrays.copyOf(bytesToHash, bytesToHash.length + 1);
     
-    System.arraycopy(bytesToHash, 0, bigger, 0, bytesToHash.length);
-    System.arraycopy(bytes, 0, bigger, bytesToHash.length, bytesToHash.length + bytes.length);
-
-    Arrays.fill(bytesToHash, CryptoUtils.ZERO_BYTE);
-    
-    bytesToHash = bigger;
-    
-    return this;
-  }
-
-  @Override
-  public byte[] computeHash(byte[] out , int start) {
-    
-    BlowfishCipher cipher = new BlowfishCipher(ArrayUtils.add(bytesToHash, (byte)0), salt, rounds);
+    BlowfishCipher cipher = new BlowfishCipher(bytes, salt, rounds);
     
     byte[] cipherText = "OrpheanBeholderScryDoubt".getBytes();
     
     int[] cipherInts = CryptoUtils.intArrayFromBytes(cipherText, 0, cipherText.length);
     
-    MutableInt a = new MutableInt(cipherInts[0]);
-    MutableInt b = new MutableInt(cipherInts[1]);
-    MutableInt c = new MutableInt(cipherInts[2]);
-    MutableInt d = new MutableInt(cipherInts[3]);
-    MutableInt e = new MutableInt(cipherInts[4]);
-    MutableInt f = new MutableInt(cipherInts[5]); 
+    int[] ab = new int[]{cipherInts[0], cipherInts[1]};
+    int[] cd = new int[]{cipherInts[2], cipherInts[3]};
+    int[] ef = new int[]{cipherInts[4], cipherInts[5]};
+    CryptoUtils.fillWithZeroes(cipherInts);
     
     for (int n = 0; n < 64; n++) {
-      cipher.encryptBlock(a, b);
-      cipher.encryptBlock(c, d);
-      cipher.encryptBlock(e, f);
+      cipher.encryptBlock(ab);
+      cipher.encryptBlock(cd);
+      cipher.encryptBlock(ef);
     }
     
-    CryptoUtils.intToBytes(a.intValue(), cipherText, 0);
-    CryptoUtils.intToBytes(b.intValue(), cipherText, 4);
-    CryptoUtils.intToBytes(c.intValue(), cipherText, 8);
-    CryptoUtils.intToBytes(d.intValue(), cipherText, 12);
-    CryptoUtils.intToBytes(e.intValue(), cipherText, 16);
-    CryptoUtils.intToBytes(f.intValue(), cipherText, 20);
+    CryptoUtils.intToBytes(ab[0], cipherText, 0);
+    CryptoUtils.intToBytes(ab[1], cipherText, 4);
+    CryptoUtils.intToBytes(cd[0], cipherText, 8);
+    CryptoUtils.intToBytes(cd[1], cipherText, 12);
+    CryptoUtils.intToBytes(ef[0], cipherText, 16);
+    CryptoUtils.intToBytes(ef[1], cipherText, 20);
     
-    System.arraycopy(cipherText, 0, out, start, cipherText.length);
+    byte[] out = new byte[24];
+    
+    System.arraycopy(cipherText, 0, out, 0, cipherText.length);
+    CryptoUtils.fillWithZeroes(bytes);
+    CryptoUtils.fillWithZeroes(ab);
+    CryptoUtils.fillWithZeroes(cd);
+    CryptoUtils.fillWithZeroes(ef);
     
     return out;
   }
   
-  @Override
-  public String computeHashString() {
+  public static String computeHashString(boolean isV2Y, int rounds, byte[] salt, byte[] bytesToHash) {
     StringBuilder str = new StringBuilder();
     
     if (isV2Y) {
@@ -107,28 +65,9 @@ public class Bcrypt extends Hasher {
     str.append(Base64Codec.getOpenBSDBase64Codec().encode(salt).substring(0, 22));
     
     //31 character hash
-    str.append(Base64Codec.getOpenBSDBase64Codec().encode(computeHash(), 23).substring(0, 31));
+    str.append(Base64Codec.getOpenBSDBase64Codec().encode(computeHash(rounds, salt, bytesToHash), 23).substring(0, 31));
     
     return str.toString();
-  }
-
-  @Override
-  public Hasher reset() {
-    if (bytesToHash != null) {
-      CryptoUtils.fillWithZeroes(bytesToHash);
-    }
-    bytesToHash = new byte[]{};
-    return this;
-  }
-
-  @Override
-  public int getBlockBytes() {
-    return 8;
-  }
-
-  @Override
-  public int getHashByteLength() {
-    return 24;
   }
 
   public static boolean verifyPassword(String hash, String password) {
@@ -174,12 +113,7 @@ public class Bcrypt extends Hasher {
     
     byte[] salt = Base64Codec.getOpenBSDBase64Codec().decode(hash.substring(thirdDollar + 1, thirdDollar + 23));
      
-    return new Bcrypt(salt, cost, isUsingV2Y).addBytes(password.getBytes()).computeHashString().equals(hash);
-    
-  }
-
-
-  @Override
-  protected void hashBlock(byte[] data, int index) {    
+    //TODO fix timing attacks
+    return Bcrypt.computeHashString(isUsingV2Y, cost, salt, password.getBytes()).equals(hash);
   }
 }

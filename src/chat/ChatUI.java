@@ -3,7 +3,6 @@ package chat;
 import hash.Hasher;
 import hash.sha.SHA3;
 import hash.sha.SHA3Mode;
-import hmac.HMAC;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -42,15 +41,17 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
+import mac.hmac.HMAC;
 import cipher.BlockCipher;
+import cipher.Cipher;
 import cipher.CompoundBlockCipher;
-import cipher.StreamCipher;
 import cipher.aes.AES;
 import cipher.blowfish.TwoFish;
+import cipher.mode.CTRMode;
 import cipher.serpent.Serpent;
 import pbkdf2.PBKDF2;
 import random.CTRModeRandom;
-import random.RandomStreamCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class ChatUI implements MouseMotionListener, MouseListener {
@@ -74,7 +75,7 @@ public class ChatUI implements MouseMotionListener, MouseListener {
 
   private Hasher h = new SHA3(SHA3Mode.SHA3, 64);
   private HMAC hmac = new HMAC(h);
-  private StreamCipher cipher;
+  private Cipher cipher;
   // private byte[] rawEntropy = new byte[2];
   private byte[] rawEntropy = new byte[h.getBlockBytes() * 4];
   private byte[] keySalt;
@@ -104,8 +105,6 @@ public class ChatUI implements MouseMotionListener, MouseListener {
 
   private final String OFFLINE_TITLE = "Abarrow Chat Codec";
   
-  private CTRModeRandom cipherRandom;
-
   public static void main(String[] args) {
     new ChatUI();
   }
@@ -387,9 +386,8 @@ public class ChatUI implements MouseMotionListener, MouseListener {
             CryptoUtils.fillWithZeroes(hashedKey1);
             CryptoUtils.fillWithZeroes(hashedKey2);
 
-            cipherRandom = new CTRModeRandom(new CompoundBlockCipher(new BlockCipher[] { new AES(aesKey),
+            cipher = new CTRMode(new CompoundBlockCipher(new BlockCipher[] { new AES(aesKey),
                 new TwoFish(twoFishKey), new Serpent(serpentKey) }), getNewIV());
-            cipher = new RandomStreamCipher(cipherRandom);
             log("Finished genearting sub keys.");
             encryptButton.setEnabled(true);
             decryptButton.setEnabled(true);
@@ -401,9 +399,15 @@ public class ChatUI implements MouseMotionListener, MouseListener {
       lockInKeyIV.start();
     } else if (event.getComponent().equals(encryptButton)) {
       byte[] iv = getNewIV();
-      cipherRandom.setIV(iv);
+      cipher.setIV(iv);
       byte[] plainText = messageInput.getText().getBytes();
-      byte[] cipherText = cipher.encrypt(plainText);
+      byte[] cipherText = null;
+      try {
+        cipherText = cipher.encrypt(plainText);
+      } catch (CryptoException e) {
+        log(e.getMessage());
+        return;
+      }
       byte[] concat = new byte[iv.length + cipherText.length];
       System.arraycopy(iv, 0, concat, 0, iv.length);
       System.arraycopy(cipherText, 0, concat, iv.length, cipherText.length);
@@ -446,10 +450,16 @@ public class ChatUI implements MouseMotionListener, MouseListener {
         return;
       }
       
-      cipherRandom.setIV(iv);
-      byte[] plainTextBytes = cipher.decrypt(cipherText);
+      cipher.setIV(iv);
+      byte[] plainTextBytes;
+      try {
+        plainTextBytes = cipher.decrypt(cipherText);
+        messageOutput.setText(new String(plainTextBytes));
+      } catch (CryptoException e) {
+        log(e.getMessage());
+      }
       
-      messageOutput.setText(new String(plainTextBytes));
+      
     }
   }
 

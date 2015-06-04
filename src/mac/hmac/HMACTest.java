@@ -1,4 +1,4 @@
-package hmac;
+package mac.hmac;
 
 import static org.junit.Assert.*;
 import hash.md.MD5;

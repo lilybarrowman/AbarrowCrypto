@@ -1,10 +1,8 @@
 package cipher.des;
 
 import java.util.Arrays;
-
-import org.apache.commons.lang.mutable.MutableInt;
-
 import cipher.BlockCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 
 public class DES extends BlockCipher {
@@ -76,16 +74,145 @@ public class DES extends BlockCipher {
   public static final int[] LEFT_SHIFTS = new int[] { 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 };
   
   private long[] subKeys;
-    
-  private byte[] temp;
   
-  private byte[] premutated;
+  public DES() {
+  }
   
   public DES(byte[] key) {
+    setKey(key);
+    
+  }
 
-    premutated = new byte[DES.BLOCK_BYTES];
+  @Override
+  public int getBlockBytes() {
+    return DES.BLOCK_BYTES;
+  }
+
+  private int S(int B, int n) {
+    //B is 6 bits
+    int row = ((B >>> 4) & 0x2) + (B & 0x1); // first bit of B followed by the last bit of B
+    int column = (B >>> 1) & 0xf; //the middle 4 bits of B
+    return DES.S_N[n - 1][row * 16 + column];
+  }
+
+  private int f(int R, long K) {
+    long B = K ^ CryptoUtils.permuteIntByBitToLong(R, -1, DES.E_CONSTANTS);
+    int preP = 0;
+
+    for (int i = 1; i <= 8; i++) {           
+      //get six bits from B
+      //send them through an s bucket and add them to preP
+      preP += S((int) (B >>> (64 - 6*i)), i) << (32 - (4 * i));
+    }
+                    
+    int postP = CryptoUtils.permuteIntByBit(preP, -1, DES.P_CONSTANTS);
+    return postP;
+  }
+
+  @Override
+  public byte[] encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    byte[] premutated = new byte[DES.BLOCK_BYTES];
+    byte[] temp = new byte[DES.BLOCK_BYTES];
+    CryptoUtils.permuteByteArrayByBit(input, srcPos * 8 - 1, premutated, DES.IP);
+
+    int[] LR = CryptoUtils.intArrayFromBytes(premutated, 0, 8);
+
+    encryptBlock(LR);
+
+    CryptoUtils.intToBytes(LR[0], premutated, 0);
+    CryptoUtils.intToBytes(LR[1], premutated, 4);
+    
+    CryptoUtils.permuteByteArrayByBit(premutated, -1, temp, DES.IP_PRIME);
+    
+    CryptoUtils.copyBitsFromByteArray(temp, 0, DES.BLOCK_BITS, output, destPos * 8);
+    
+    Arrays.fill(temp, CryptoUtils.ZERO_BYTE);
+    Arrays.fill(premutated, CryptoUtils.ZERO_BYTE);
+    return output;
+  }
+
+  private void encryptBlock(int[] LR) {
+
+    int L = LR[0];
+    int R = LR[1];
+    
+    int oldL;
+
+    for (int i = 1; i <= DES.ROUNDS; i++) {
+      oldL = L;
+      L = R;
+      // replace with the proper key
+      R = oldL ^ f(R, subKeys[i - 1]);
+    }
+
+    LR[0] = R;
+    LR[1] = L;
+  }
+
+  private void decryptBlock(int[] RL) {
+
+    int L = RL[1];
+    int R = RL[0];
+    
+    int oldR;
+
+    for (int i = DES.ROUNDS; i >= 1; i--) {
+      oldR = R;
+      R = L;
+      // replace with the proper key
+      L = oldR ^ f(L, subKeys[i - 1]);
+    }
+
+    RL[1] = R;
+    RL[0] = L;
+  }
+
+  @Override
+  public byte[] decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) throws CryptoException {
+    if (!hasKey()) {
+      throw new CryptoException(CryptoException.NO_KEY);
+    }
+    byte[] premutated = new byte[DES.BLOCK_BYTES];
+    byte[] temp = new byte[DES.BLOCK_BYTES];
+    CryptoUtils.permuteByteArrayByBit(input, srcPos * 8 - 1, premutated, DES.IP);
+    
+    int[] RL = CryptoUtils.intArrayFromBytes(premutated, 0, 8);
+
+    decryptBlock(RL);
+
+    CryptoUtils.intToBytes(RL[0], premutated, 0);
+    CryptoUtils.intToBytes(RL[1], premutated, 4);
+    
+    CryptoUtils.permuteByteArrayByBit(premutated, -1, temp, DES.IP_PRIME);
+    
+    CryptoUtils.copyBitsFromByteArray(temp, 0, DES.BLOCK_BITS, output, destPos * 8);
+    
+    Arrays.fill(temp, CryptoUtils.ZERO_BYTE);
+    Arrays.fill(premutated, CryptoUtils.ZERO_BYTE);
+    return output;
+  }
+
+  public int[] getValidKeyLengths() {
+    return DES.KEY_LENGTHS;
+  }
+
+  @Override
+  public void removeKey() {
+    if (!hasKey()) {
+      return;
+    }
+    CryptoUtils.fillWithZeroes(subKeys);
+    subKeys = null;
+    
+  }
+
+  @Override
+  public void setKey(byte[] key) {
+    byte[] premutated = new byte[DES.BLOCK_BYTES];
     subKeys = new long[DES.ROUNDS];
-    temp = new byte[DES.BLOCK_BYTES];
     
     byte[] swap;
     byte[] fortyEightBits = new byte[6];
@@ -121,110 +248,8 @@ public class DES extends BlockCipher {
   }
 
   @Override
-  public int getBlockBytes() {
-    return DES.BLOCK_BYTES;
-  }
-
-  private int S(int B, int n) {
-    //B is 6 bits
-    int row = ((B >>> 4) & 0x2) + (B & 0x1); // first bit of B followed by the last bit of B
-    int column = (B >>> 1) & 0xf; //the middle 4 bits of B
-    return DES.S_N[n - 1][row * 16 + column];
-  }
-
-  private int f(int R, long K) {
-    long B = K ^ CryptoUtils.permuteIntByBitToLong(R, -1, DES.E_CONSTANTS);
-    int preP = 0;
-
-    for (int i = 1; i <= 8; i++) {           
-      //get six bits from B
-      //send them through an s bucket and add them to preP
-      preP += S((int) (B >>> (64 - 6*i)), i) << (32 - (4 * i));
-    }
-                    
-    int postP = CryptoUtils.permuteIntByBit(preP, -1, DES.P_CONSTANTS);
-    return postP;
-  }
-
-  @Override
-  public void encryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    CryptoUtils.permuteByteArrayByBit(input, srcPos * 8 - 1, premutated, DES.IP);
-
-    MutableInt L = new MutableInt(CryptoUtils.intFromBytes(premutated, 0));
-    MutableInt R = new MutableInt(CryptoUtils.intFromBytes(premutated, 4));
-
-    encryptBlock(L, R);
-
-    CryptoUtils.intToBytes(L.intValue(), premutated, 0);
-    CryptoUtils.intToBytes(R.intValue(), premutated, 4);
-    
-    CryptoUtils.permuteByteArrayByBit(premutated, -1, temp, DES.IP_PRIME);
-    
-    CryptoUtils.copyBitsFromByteArray(temp, 0, DES.BLOCK_BITS, output, destPos * 8);
-    
-    Arrays.fill(temp, CryptoUtils.ZERO_BYTE);
-    Arrays.fill(premutated, CryptoUtils.ZERO_BYTE);
-  }
-
-  private void encryptBlock(MutableInt lRef, MutableInt rRef) {
-
-    int L = lRef.intValue();
-    int R = rRef.intValue();
-    
-    int oldL;
-
-    for (int i = 1; i <= DES.ROUNDS; i++) {
-      oldL = L;
-      L = R;
-      // replace with the proper key
-      R = oldL ^ f(R, subKeys[i - 1]);
-    }
-
-    lRef.setValue(R);
-    rRef.setValue(L);
-  }
-
-  private void decryptBlock(MutableInt rRef, MutableInt lRef) {
-
-    int L = lRef.intValue();
-    int R = rRef.intValue();
-    
-    int oldR;
-
-    for (int i = DES.ROUNDS; i >= 1; i--) {
-      oldR = R;
-      R = L;
-      // replace with the proper key
-      L = oldR ^ f(L, subKeys[i - 1]);
-    }
-
-    lRef.setValue(R);
-    rRef.setValue(L);
-  }
-
-  @Override
-  public void decryptBlock(byte[] input, int srcPos, byte[] output, int destPos) {
-    CryptoUtils.permuteByteArrayByBit(input, srcPos * 8 - 1, premutated, DES.IP);
-
-    MutableInt R = new MutableInt(CryptoUtils.intFromBytes(premutated, 0));
-    MutableInt L = new MutableInt(CryptoUtils.intFromBytes(premutated, 4));
-
-    decryptBlock(R, L);
-
-    CryptoUtils.intToBytes(R.intValue(), premutated, 0);
-    CryptoUtils.intToBytes(L.intValue(), premutated, 4);
-    
-    CryptoUtils.permuteByteArrayByBit(premutated, -1, temp, DES.IP_PRIME);
-    
-    CryptoUtils.copyBitsFromByteArray(temp, 0, DES.BLOCK_BITS, output, destPos * 8);
-    
-    Arrays.fill(temp, CryptoUtils.ZERO_BYTE);
-    Arrays.fill(premutated, CryptoUtils.ZERO_BYTE);
-
-  }
-
-  public int[] getValidKeyLengths() {
-    return DES.KEY_LENGTHS;
+  public boolean hasKey() {
+    return subKeys != null;
   }
 
 }

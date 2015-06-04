@@ -1,18 +1,17 @@
 package cipher.rc4;
 
 import org.junit.Test;
-
-import random.RandomStreamCipher;
+import core.CryptoException;
 import core.CryptoUtils;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 
 
-public class RC4RandomTest {
+public class RC4Test {
   
   @Test
-  public void testRC4Random() {
+  public void testRC4() throws CryptoException {
     testExample("Key", "Plaintext", "bbf316e8d940af0ad3", 0);
     testExample("Wiki", "pedia", "1021bf0420", 0);
     testExample("Secret", "Attack at dawn", "45a01f645fc35b383552544b9bf5", 0);
@@ -22,11 +21,11 @@ public class RC4RandomTest {
 
   }
   
-  public void testExample(String keyString, String input, String expectedEncoding, int drop) {
+  public void testExample(String keyString, String input, String expectedEncoding, int drop) throws CryptoException {
     byte[] key = keyString.getBytes();
     byte[] original =  input.getBytes();
-    byte[] encoded = (new RandomStreamCipher(new RC4Random(key), drop)).codec(original);
-    byte[] decoded = (new RandomStreamCipher(new RC4Random(key), drop)).codec(encoded);
+    byte[] encoded = new RC4(key).drop(drop).encrypt(original);
+    byte[] decoded = new RC4(key).drop(drop).decrypt(encoded);
     
     assertArrayEquals(original, decoded);
     assertEquals(expectedEncoding, CryptoUtils.byteArrayToHexString(encoded));

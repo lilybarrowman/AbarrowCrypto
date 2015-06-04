@@ -1,10 +1,12 @@
 package core;
 
+import java.io.IOException;
+import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.commons.lang.mutable.MutableInt;
-
 public class CryptoUtils {
+  
+  
 
   public static final byte ONE_AND_SEVEN_ZEROES_BYTE = (byte) 0x80;
   public static final byte ZERO_BYTE = (byte) 0;
@@ -236,15 +238,15 @@ public class CryptoUtils {
 
   /*
    */
-  public static int circularlyExtractIntFromBytes(byte[] bytes, MutableInt start) {
+  public static int circularlyExtractIntFromBytes(byte[] bytes, int[] start) {
     // big endian
-    int startVal = start.intValue();
+    int startVal = start[0];
     int data = 0;
     for (int q = 0; q < 4; q++) {
       data = (data << 8) | (bytes[startVal] & 0xff);
       startVal = (startVal + 1) % bytes.length;
     }
-    start.setValue(startVal);
+    start[0] = startVal;
     return data;
   }
 
@@ -613,27 +615,71 @@ public class CryptoUtils {
     return values;
   }
 
-  public static int multiplyFiniteFieldBytes(int a, int b, int irreduciblePolynomial) {
-    int out = 0;
-    for (int n = 7; n >= 0; n--) {
-      out ^= (b & (1 << n)) * a;
-    }
-
-    // polynomial long division in this absurd world
-    int count = 0;
-    while (out >= 256 && count < 100) {
-      int c = out;
-      // find the most significant bit
-      int j = -1;
-      while (c > 0) {
-        c = c >>> 1;
-        j++;
+  public static int multiplyFiniteFieldBytes(int a, int b, int fundPoly) {
+    int p = 0;
+    for (int n = 0; (n < 8) && ((b != 0) || (a != 0)); n++) {
+      if ((b & 0x01) == 1) {
+        p ^= a;
       }
-      // 1 << j is the most significant bit
-      out ^= (irreduciblePolynomial << (j - 8));
-      count++;
+      b = b >>> 1;
+      a = a << 1;
+      if (a > 255) {
+        a ^= fundPoly;
+      }
     }
-    return out;
+    return p;
+  }
+  
+  public static byte[] multiplyFiniteFields(byte[] a, byte[] b, byte[] p, byte[] truncFundPoly) {
+    return multiplyFiniteFieldsModifyingInputs(Arrays.copyOf(a, a.length), Arrays.copyOf(b, b.length), p, truncFundPoly);
+  }
+  
+  public static byte[] rightShiftBitsInByteArray(byte[] bytes, int places) {
+    int byteLength = bytes.length;
+    int placeBytes = places / 8;
+    int placeBits = places % 8;
+    int invPlaceBits = 8 - placeBits;
+    for(int n = byteLength - 1; n >= 0; n--) {
+      int near = ((n - placeBytes) < 0) ? 0 : bytes[n - placeBytes] & 0xff;
+      int far = ((n - placeBytes - 1) < 0) ? 0 : bytes[n - placeBytes - 1] & 0xff;
+      bytes[n] = (byte) ((near >>> placeBits) | ((far << invPlaceBits) & 0xff));
+    }
+    return bytes;
+  }
+  
+  public static byte[] leftShiftBitsInByteArray(byte[] bytes, int places) {
+    int byteLength = bytes.length;
+    int placeBytes = places / 8;
+    int placeBits = places % 8;
+    int invPlaceBits = 8 - placeBits;
+    for(int n = 0; n < byteLength; n++) {
+      int near = ((n + placeBytes) >= byteLength) ? 0 : bytes[n + placeBytes] & 0xff;
+      int far = ((n + placeBytes + 1) >= byteLength) ? 0 : bytes[n + placeBytes + 1] & 0xff;
+      bytes[n] = (byte) ((far >>> invPlaceBits) | ((near << placeBits) & 0xff));
+    }
+    return bytes;
+  }
+  
+  public static byte[] multiplyFiniteFieldsModifyingInputs(byte[] a, byte[] b, byte[] p, byte[] truncFundPoly) {
+    // This method use little endian bit notation (LS bit first MS bit last)
+    CryptoUtils.fillWithZeroes(p);
+    
+    int bits = a.length * 8;
+    int byteLength = a.length;
+      
+    for (int n = 0; (n < bits); n++) {
+      if ((b[0] & 0x80) == 128) {
+        CryptoUtils.xorByteArrays(a, 0, p, 0, p, 0, byteLength);
+      }
+      
+      CryptoUtils.leftShiftBitsInByteArray(b, 1);
+      int carry = a[0] & 0x1;
+      CryptoUtils.rightShiftBitsInByteArray(a, 1);
+      if (carry == 1) {
+        CryptoUtils.xorByteArrays(a, 0, truncFundPoly, 0, a, 0, byteLength);
+      }
+    }
+    return p;
   }
 
 }
