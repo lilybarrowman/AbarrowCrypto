@@ -18,5 +18,5 @@ public interface Cipher {
   public void setIV(byte[] initVector);
   public boolean hasIV();
   
-  public int getPaddingSize();
+  public int getBlockBytes();
 }

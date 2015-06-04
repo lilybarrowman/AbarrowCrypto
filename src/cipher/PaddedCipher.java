@@ -16,7 +16,7 @@ public class PaddedCipher implements Cipher {
   public PaddedCipher(Cipher c, Padding p) {
     cipher = c;
     padding = p;
-    padding.setBlockSize(cipher.getPaddingSize());
+    padding.setBlockSize(cipher.getBlockBytes());
   }
 
   @Override
@@ -70,8 +70,8 @@ public class PaddedCipher implements Cipher {
   }
   
   @Override
-  public int getPaddingSize() {
-    return cipher.getPaddingSize();
+  public int getBlockBytes() {
+    return cipher.getBlockBytes();
   }
 
   @Override

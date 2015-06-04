@@ -69,8 +69,8 @@ public class AuthenticatedCipher implements Cipher {
   }
 
   @Override
-  public int getPaddingSize() {
-    return cipher.getPaddingSize();
+  public int getBlockBytes() {
+    return cipher.getBlockBytes();
   }
 
   @Override

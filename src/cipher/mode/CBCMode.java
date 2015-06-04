@@ -180,7 +180,7 @@ public class CBCMode implements Cipher {
   }
 
   @Override
-  public int getPaddingSize() {
+  public int getBlockBytes() {
     return core.getBlockBytes();
   }
 }

@@ -140,7 +140,7 @@ public class CTRMode implements Cipher {
   }
 
   @Override
-  public int getPaddingSize() {
+  public int getBlockBytes() {
     return 0;
   }
 
