@@ -284,6 +284,7 @@ public class BlowfishCipher extends BlockCipher {
   }
   
   public void setKey(byte[] key, byte[] salt, int cost) {
+    removeKey();
     P = new int[BlowfishCipher.P_SIZE];
     S = new int[BlowfishCipher.S_SIZE];
 

@@ -263,6 +263,7 @@ public class TwoFish extends BlockCipher {
 
   @Override
   public void setKey(byte[] key) {
+    removeKey();
     if (key.length != 32) {
       Arrays.copyOf(key, 32);
     }

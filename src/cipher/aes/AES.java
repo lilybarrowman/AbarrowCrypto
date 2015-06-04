@@ -276,6 +276,7 @@ public class AES extends BlockCipher {
 
   @Override
   public void setKey(byte[] key) {
+    removeKey();
     byte[] aesKey = null;
     if (key.length == 32 || key.length == 24 || key.length == 16) {
       aesKey = key;

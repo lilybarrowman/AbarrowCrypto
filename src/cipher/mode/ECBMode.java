@@ -123,7 +123,8 @@ public class ECBMode implements Cipher {
 
   
   @Override
-  public void setIV(byte[] initVector) {    
+  public boolean setIV(byte[] initVector) { 
+    return false;
   }
 
   @Override
@@ -134,6 +135,11 @@ public class ECBMode implements Cipher {
   @Override
   public int getBlockBytes() {
     return core.getBlockBytes();
+  }
+
+  @Override
+  public byte[] getIV() {
+    return null;
   }
 
 }

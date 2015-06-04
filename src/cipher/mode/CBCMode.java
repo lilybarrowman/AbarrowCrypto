@@ -35,7 +35,6 @@ public class CBCMode implements Cipher {
     if ((input.length % blockSize) != 0) {
       throw new CryptoException(CryptoException.INVALID_LENGTH);
     }
-    int outputOffset = 0;
     byte[] output = new byte[input.length];
     int i;
     byte[] xored = new byte[blockSize];
@@ -160,8 +159,9 @@ public class CBCMode implements Cipher {
   }
   
   @Override
-  public void setIV(byte[] initVector) {
+  public boolean setIV(byte[] initVector) {
     iv = Arrays.copyOf(initVector, blockSize);
+    return true;
   }
   
   @Override
@@ -182,5 +182,10 @@ public class CBCMode implements Cipher {
   @Override
   public int getBlockBytes() {
     return core.getBlockBytes();
+  }
+
+  @Override
+  public byte[] getIV() {
+    return iv;
   }
 }

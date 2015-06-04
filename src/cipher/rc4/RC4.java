@@ -92,6 +92,7 @@ public class RC4 implements Cipher {
 
   @Override
   public void setKey(byte[] key) {
+    removeKey();
     S = new byte[RC4.MAX_KEY_LENGTH];
     int i;
     
@@ -125,7 +126,8 @@ public class RC4 implements Cipher {
   }
 
   @Override
-  public void setIV(byte[] initVector) {
+  public boolean setIV(byte[] initVector) {
+    return false;
   }
   
   @Override
@@ -136,6 +138,11 @@ public class RC4 implements Cipher {
   @Override
   public int getBlockBytes() {
     return 0;
+  }
+
+  @Override
+  public byte[] getIV() {
+    return null;
   }
 
   

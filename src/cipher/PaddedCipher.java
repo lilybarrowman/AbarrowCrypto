@@ -65,8 +65,8 @@ public class PaddedCipher implements Cipher {
   }
 
   @Override
-  public void setIV(byte[] initVector) {
-    cipher.setIV(initVector);
+  public boolean setIV(byte[] initVector) {
+    return cipher.setIV(initVector);
   }
   
   @Override
@@ -77,6 +77,11 @@ public class PaddedCipher implements Cipher {
   @Override
   public boolean hasIV() {
     return cipher.hasIV();
+  }
+
+  @Override
+  public byte[] getIV() {
+    return cipher.getIV();
   }
 
 }

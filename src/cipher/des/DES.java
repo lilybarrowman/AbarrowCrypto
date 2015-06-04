@@ -211,6 +211,7 @@ public class DES extends BlockCipher {
 
   @Override
   public void setKey(byte[] key) {
+    removeKey();
     byte[] premutated = new byte[DES.BLOCK_BYTES];
     subKeys = new long[DES.ROUNDS];
     

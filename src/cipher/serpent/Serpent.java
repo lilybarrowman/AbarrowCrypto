@@ -679,6 +679,7 @@ public class Serpent extends BlockCipher {
 
   @Override
   public void setKey(byte[] key) {
+    removeKey();
     byte[] fullKey;
 
     if (key.length == 32) {

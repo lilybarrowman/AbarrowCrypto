@@ -15,7 +15,8 @@ public interface Cipher {
   public boolean hasKey();
   public void removeKey();
   
-  public void setIV(byte[] initVector);
+  public boolean setIV(byte[] initVector);
+  public byte[] getIV();
   public boolean hasIV();
   
   public int getBlockBytes();

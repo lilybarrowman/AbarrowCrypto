@@ -115,8 +115,9 @@ public class CTRMode implements Cipher {
   }
   
   @Override
-  public void setIV(byte[] initVector) {
+  public boolean setIV(byte[] initVector) {
     iv = Arrays.copyOf(initVector, blockSize);
+    return true;
   }
 
   @Override
@@ -141,7 +142,12 @@ public class CTRMode implements Cipher {
 
   @Override
   public int getBlockBytes() {
-    return 0;
+    return core.getBlockBytes();
+  }
+
+  @Override
+  public byte[] getIV() {
+    return iv;
   }
 
 }
