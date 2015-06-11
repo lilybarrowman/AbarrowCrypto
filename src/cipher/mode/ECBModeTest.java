@@ -13,7 +13,7 @@ import core.CryptoException;
 import padding.PKCS7;
 import padding.Padding;
 import padding.ZeroPadding;
-import cipher.PaddedCipher;
+import cipher.Cipher;
 import cipher.aes.AES;
 
 public class ECBModeTest {
@@ -29,7 +29,7 @@ public class ECBModeTest {
 
   private void testCase(byte[] key, byte[] plainText, byte[] expectedCipherText, Padding padding)
       throws InterruptedException, IOException, CryptoException {
-    PaddedCipher ecbMode = new PaddedCipher(new ECBMode(new AES(key)), padding);
+    Cipher ecbMode = new ECBMode(new AES(key), padding);
     
     ByteArrayOutputStream o = new ByteArrayOutputStream();
     ecbMode.encrypt().start(new ByteArrayInputStream(plainText), o);

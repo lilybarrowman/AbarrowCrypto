@@ -27,7 +27,6 @@ import javax.swing.filechooser.FileFilter;
 
 import padding.PKCS7;
 import cipher.Cipher;
-import cipher.PaddedCipher;
 import cipher.aes.AES;
 import cipher.mode.ECBMode;
 import wavtools.WavSampleData;
@@ -218,7 +217,7 @@ public class StenographyDemo implements ActionListener {
         statusLabel.setText("Error reading stenographic file.");
       }
 
-      Cipher cipher = new PaddedCipher(new ECBMode(new AES(getPaddedPassword())), new PKCS7());
+      Cipher cipher = new ECBMode(new AES(getPaddedPassword()), new PKCS7());
       byte[] decoded;
       try {
         decoded = cipher.decrypt(stenData.bytes);
@@ -273,7 +272,7 @@ public class StenographyDemo implements ActionListener {
         } else if (fileChooserState.equals("ChoosingDest")) {
           File outputFile = fileChooser.getSelectedFile();
 
-          Cipher cipher = new PaddedCipher(new ECBMode(new AES(getPaddedPassword())), new PKCS7());
+          Cipher cipher = new ECBMode(new AES(getPaddedPassword()), new PKCS7());
           byte[] encoded = null;
           try{
             encoded = cipher.encrypt(source);

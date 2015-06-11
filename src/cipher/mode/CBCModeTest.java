@@ -13,7 +13,6 @@ import core.CryptoException;
 import padding.Padding;
 import padding.ZeroPadding;
 import cipher.Cipher;
-import cipher.PaddedCipher;
 import cipher.aes.AES;
 
 public class CBCModeTest {
@@ -30,7 +29,7 @@ public class CBCModeTest {
   private void testCase(byte[] key, byte[] iv, byte[] plainText,
       byte[] expectedCipherText, byte[] expectedPlainText, Padding padding)
       throws InterruptedException, IOException, CryptoException {
-    Cipher cbcMode = new PaddedCipher(new CBCMode(new AES(key), iv), padding);
+    Cipher cbcMode = new CBCMode(new AES(key), padding, iv);
     
     ByteArrayOutputStream o = new ByteArrayOutputStream();
     cbcMode.encrypt().start(new ByteArrayInputStream(plainText), o);

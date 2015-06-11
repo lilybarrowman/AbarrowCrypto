@@ -12,6 +12,7 @@ public interface MAC {
   public StreamRunnable unTag(boolean unTagOnly);
   public byte[] unTag(byte[] data, boolean unTagOnly);
   
+  public void setKey(byte[] key);
 
   public int getTagLength();
 }

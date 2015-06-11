@@ -6,7 +6,7 @@ import javax.xml.bind.DatatypeConverter;
 
 public class CryptoUtils {
   
-  
+  public static final byte[] EMPTY_BYTES = new byte[0];
 
   public static final byte ONE_AND_SEVEN_ZEROES_BYTE = (byte) 0x80;
   public static final byte ZERO_BYTE = (byte) 0;

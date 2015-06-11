@@ -22,6 +22,17 @@ public class AuthenticatedCipher implements Cipher {
   public byte[] encrypt(byte[] input) throws CryptoException {
     return mac.tag(cipher.encrypt(input), false);
   }
+  
+  /**
+   * 
+   * @param encrypt The data to be encrypted and authenticated.
+   * @param  Data that only needs to be authenticated.
+   * @return The
+   * @throws CryptoException
+   */
+  public byte[] encrupt(byte[] encrypt, byte[] auth) throws CryptoException {
+    return mac.tag(cipher.encrypt(encrypt), false);
+  }
 
   @Override
   public byte[] decrypt(byte[] input) throws CryptoException {

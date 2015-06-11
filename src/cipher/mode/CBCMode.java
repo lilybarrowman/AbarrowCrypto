@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import padding.Padding;
 import stream.StreamRunnable;
 import cipher.BlockCipher;
 import cipher.Cipher;
@@ -16,25 +17,25 @@ public class CBCMode implements Cipher {
   private byte[] iv;
   private BlockCipher core;
   private int blockSize;
+  private Padding padding;
   
-  public CBCMode(BlockCipher cipherCore) {
+  public CBCMode(BlockCipher cipherCore, Padding p) {
     core = cipherCore;
     blockSize = core.getBlockBytes();
+    padding = p.setBlockSize(blockSize);
   }
 
-  public CBCMode(BlockCipher cipherCore, byte[] intializationVector) {
-    this(cipherCore);
+  public CBCMode(BlockCipher cipherCore, Padding p, byte[] intializationVector) {
+    this(cipherCore, p);
     setIV(intializationVector);
   }
   
   @Override
-  public byte[] encrypt(byte[] input) throws CryptoException {
+  public byte[] encrypt(byte[] unpadded) throws CryptoException {
     if (!hasIV()) {
       throw new CryptoException(CryptoException.NO_IV);
     }
-    if ((input.length % blockSize) != 0) {
-      throw new CryptoException(CryptoException.INVALID_LENGTH);
-    }
+    byte[] input = padding.pad(unpadded);
     byte[] output = new byte[input.length];
     int i;
     byte[] xored = new byte[blockSize];
@@ -54,9 +55,6 @@ public class CBCMode implements Cipher {
     if (!hasIV()) {
       throw new CryptoException(CryptoException.NO_IV);
     }
-    if ((input.length % blockSize) != 0) {
-      throw new CryptoException(CryptoException.INVALID_LENGTH);
-    }
     byte[] output = new byte[input.length];
     byte[] swap;
     int i;
@@ -74,7 +72,7 @@ public class CBCMode implements Cipher {
 
     CryptoUtils.fillWithZeroes(xored);
     CryptoUtils.fillWithZeroes(chain);
-    return output;
+    return padding.unpad(output);
   }
 
   @Override
@@ -87,20 +85,24 @@ public class CBCMode implements Cipher {
         }
         byte[] block = new byte[blockSize];
         byte[] xored = new byte[blockSize];
+        byte[] pointer;
+        boolean going = true;
         try {
           System.arraycopy(iv, 0, xored, 0, blockSize);
-          while (true) {
+          while (going) {
             int read = in.read(block);
             if (read == blockSize) {
-              CryptoUtils.xorByteArrays(block, 0, xored, 0, xored, 0, blockSize);
-              core.encryptBlock(xored, xored);
-              out.write(xored);
-              continue;
+              pointer = block;
+            } else {
+              pointer = padding.pad(Arrays.copyOf(block, read < 0 ? 0 : read));
+              going = false;
+              if (pointer.length == 0) {
+                break;
+              }
             }
-            if (read != -1) {
-              throw new CryptoException(CryptoException.INVALID_LENGTH);
-            }
-            break;
+            CryptoUtils.xorByteArrays(pointer, 0, xored, 0, xored, 0, blockSize);
+            core.encryptBlock(xored, xored);
+            out.write(xored);
           }
         } catch (CryptoException e) {
           throw new IOException(e);
@@ -123,24 +125,31 @@ public class CBCMode implements Cipher {
         byte[] output = new byte[blockSize];
         byte[] chain = new byte[blockSize];
         byte[] xored = new byte[blockSize];
+        boolean hasOutput = false;
         byte[] swap;
         try {
           System.arraycopy(iv, 0, chain, 0, blockSize);
           while (true) {
             int read = in.read(xored);
             if (read == blockSize) {
+              if (hasOutput) {
+                out.write(output);
+              }
               core.decryptBlock(xored, output);
               CryptoUtils.xorByteArrays(output, 0, chain, 0, output, 0, blockSize);
-              out.write(output);
               swap = xored;
               xored = chain;
               chain = swap;
+              hasOutput = true;
               continue;
             }
             if (read != -1) {
               throw new CryptoException(CryptoException.INVALID_LENGTH);
             }
             break;
+          }
+          if (hasOutput) {
+            out.write(padding.unpad(output));
           }
         } catch (CryptoException e) {
           throw new IOException(e);

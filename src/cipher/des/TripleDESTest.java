@@ -1,27 +1,25 @@
-package cipher.des;
+  package cipher.des;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.junit.Test;
 
-import padding.ZeroPadding;
-import cipher.Cipher;
-import cipher.PaddedCipher;
-import cipher.mode.ECBMode;
+import cipher.BlockCipher;
 import core.CryptoException;
-import core.CryptoUtils;
 
 public class TripleDESTest {
   
   
   @Test
   public void testTrippleDES() throws CryptoException {
-    Cipher cipher = new PaddedCipher(new ECBMode(new TripleDES("AllYourPasswordsAreWayTooShort".getBytes())), new ZeroPadding());
-    String original = "This is a super secret and secure message!";
-    byte[] originalBytes = original.getBytes();
-    byte[] encrypted = cipher.encrypt(originalBytes);
-    byte[] decrypted = cipher.decrypt(encrypted);
-    assertEquals(CryptoUtils.byteArrayToHexString(encrypted), "c12b611f56a32794956fb5604785819382787616258174a33dbf605749bc193e567b04de02403c3545ca7452fc534d8f");
-    assertEquals(original, new String(decrypted).replaceAll("\0", ""));
+    BlockCipher cipher = new TripleDES(DatatypeConverter
+        .parseHexBinary("0123456789abcdef01234567000000000000000000000000"));
+    byte[] originalBytes = DatatypeConverter.parseHexBinary("0123456700000000");
+    byte[] encrypted = cipher.encryptBlock(originalBytes);
+    byte[] decrypted = cipher.decryptBlock(encrypted);
+    assertArrayEquals(encrypted, DatatypeConverter.parseHexBinary("a7106c9badfb1c0c"));
+    assertArrayEquals(originalBytes, decrypted);
   }
 }
