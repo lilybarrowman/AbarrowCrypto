@@ -10,6 +10,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import core.CryptoException;
+import padding.PKCS7;
 import padding.Padding;
 import padding.ZeroPadding;
 import cipher.Cipher;
@@ -24,6 +25,13 @@ public class CBCModeTest {
     byte[] expectedCipherText = parseHexBinary("6232d0a50c4e00a30cfb161bcc3a4dd84079a729f94dde6429887d8ba50752c909f12f7266ba4eaab8991375e0b938ec");
     byte[] expectedPlainText = parseHexBinary("48656c6c6f20686f772061726520796f752c2061726520796f752061207261626269743f000000000000000000000000");
     testCase(key, iv,  plainText, expectedCipherText, expectedPlainText, new ZeroPadding());
+    
+    key = parseHexBinary("ac5800ac3cb59c7c14f36019e43b44fe");
+    iv = parseHexBinary("f013ce1ec901b5b60a85a986b3b72eba");
+    plainText = parseHexBinary("f6cee5ff28fd");
+    expectedCipherText = parseHexBinary("e8a846fd9718507371604504d4ca1ac7");
+    expectedPlainText = plainText;
+    testCase(key, iv,  plainText, expectedCipherText, expectedPlainText, new PKCS7());
   }
   
   private void testCase(byte[] key, byte[] iv, byte[] plainText,
