@@ -691,8 +691,6 @@ public class Serpent extends BlockCipher {
       }
     }
 
-    int[] b = new int[4];
-
     int[] roundKeyWords = CryptoUtils.intArrayFromBytes(new int[140], 0, fullKey, 0, 32, true);
 
     for (int i = 8; i < 140; i++) {

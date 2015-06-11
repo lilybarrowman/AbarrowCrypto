@@ -10,10 +10,7 @@ import core.CryptoUtils;
 
 public class RC4 implements Cipher {
 
-  private static final long serialVersionUID = 8159407569578990959L;
-  
   private static final int MAX_KEY_LENGTH = 256;
-  
   
   private byte[] S;
   

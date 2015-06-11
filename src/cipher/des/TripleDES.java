@@ -1,9 +1,6 @@
 package cipher.des;
 
 import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import cipher.BlockCipher;
 import core.CryptoException;
 import core.CryptoUtils;
@@ -73,9 +70,9 @@ public class TripleDES extends BlockCipher {
 
   @Override
   public void setKey(byte[] key) {
-    des1 = new DES(ArrayUtils.subarray(key, 0, 8));
-    des2 = new DES(ArrayUtils.subarray(key, 8, 16));
-    des3 = new DES(ArrayUtils.subarray(key, 16, 24));
+    des1 = new DES(Arrays.copyOfRange(key, 0, 8));
+    des2 = new DES(Arrays.copyOfRange(key, 8, 16));
+    des3 = new DES(Arrays.copyOfRange(key, 16, 24));
     
     temp1=new byte[getBlockBytes()];
     temp2=new byte[getBlockBytes()];    
