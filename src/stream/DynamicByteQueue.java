@@ -28,7 +28,7 @@ public class DynamicByteQueue {
     doneAdding = new AtomicBoolean(false);
     readLock = new Object();
     writeLock = new Object();
-    chunkCount = new AtomicLong(1);
+    chunkCount = new AtomicLong(0);
     front = new byte[CHUNK_SIZE];
   }
   
@@ -62,8 +62,10 @@ public class DynamicByteQueue {
   
   public void doneWriting() {
     synchronized(writeLock) {
-      if (doneAdding.compareAndSet(false, true)) {
+      if (!doneAdding.get()) {
+        chunkCount.incrementAndGet();
         byteQueue.add(front);
+        doneAdding.set(true);
       }
     }
   }
