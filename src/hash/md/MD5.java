@@ -58,7 +58,9 @@ public class MD5 extends Hasher {
     }
     
     CryptoUtils.fillWithZeroes(padded);
-    return CryptoUtils.intArrayToByteArray(out, start, hash, true);
+    byte[] result = CryptoUtils.intArrayToByteArray(out, start, hash, true);
+    reset();
+    return result;
     
   }
 
@@ -110,7 +112,7 @@ public class MD5 extends Hasher {
   }
 
   @Override
-  public Hasher reset() {
+  protected void reset() {
     super.reset();
     if (hash == null) {
       hash = Arrays.copyOf(MD5.INITIAL_HASHES, 4);
@@ -121,7 +123,6 @@ public class MD5 extends Hasher {
       CryptoUtils.fillWithZeroes(M);
       System.arraycopy(MD5.INITIAL_HASHES, 0, hash, 0, 4);
     }
-    return this;
   }
 
   @Override

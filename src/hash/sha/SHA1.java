@@ -46,7 +46,9 @@ public class SHA1 extends Hasher {
     }
     
     CryptoUtils.fillWithZeroes(padded);
-    return CryptoUtils.intArrayToByteArray(out, start, hash, false);
+    byte[] result = CryptoUtils.intArrayToByteArray(out, start, hash, false);
+    reset();
+    return result;
   }
   
   private void fillPadding(byte[] padded, int startIndex) {
@@ -101,7 +103,7 @@ public class SHA1 extends Hasher {
   }
 
   @Override
-  public Hasher reset() {
+  protected void reset() {
     super.reset();
     if (hash == null) {
       hash = Arrays.copyOf(SHA1.INITIAL_HASHES, 5);
@@ -112,8 +114,6 @@ public class SHA1 extends Hasher {
       CryptoUtils.fillWithZeroes(W);
       CryptoUtils.fillWithZeroes(padded);
     }
-    
-    return this;
   }
   
   @Override

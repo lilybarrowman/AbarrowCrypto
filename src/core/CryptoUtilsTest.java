@@ -34,7 +34,7 @@ public class CryptoUtilsTest {
     int out = CryptoUtils.permuteIntByBit(start, 0, permutation);
     assertEquals(0x55000000, out);
   }
-  
+
   @Test
   public void testCopyBitsFromByteArray() {
 
@@ -60,92 +60,87 @@ public class CryptoUtilsTest {
         (byte) 0x53, (byte) 0x63, (byte) 0x70 });
 
   }
-  
+
   @Test
   public void rotateByteArray() {
-    byte[] example = new byte[]{
-        //0110 1111
-        (byte)0x6f,
-        //1100 1001
-        (byte)0xc9
-    };
-    assertArrayEquals(CryptoUtils.rotateByteArrayRight(example, 16, 4, new byte[2]), new byte[]{
-      //1001 0110
-      (byte)0x96,
-      //1111 0110
-      (byte)0xfc
-    });
-    
-    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 16, 4, new byte[2]), new byte[]{
-      //1111 1100
-      (byte)0xfc,
-      //1001 0110
-      (byte)0x96
-    });
-    
-    //in this case we're only rotating part of the array
-    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 12, 4, new byte[2]), new byte[]{
-      //1111 1100
-      (byte)0xfc,
-      //0110 0000
-      (byte)0x60
-    });
+    byte[] example = new byte[] {
+        // 0110 1111
+        (byte) 0x6f,
+        // 1100 1001
+        (byte) 0xc9 };
+    assertArrayEquals(CryptoUtils.rotateByteArrayRight(example, 16, 4, new byte[2]), new byte[] {
+        // 1001 0110
+        (byte) 0x96,
+        // 1111 0110
+        (byte) 0xfc });
+
+    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 16, 4, new byte[2]), new byte[] {
+        // 1111 1100
+        (byte) 0xfc,
+        // 1001 0110
+        (byte) 0x96 });
+
+    // in this case we're only rotating part of the array
+    assertArrayEquals(CryptoUtils.rotateByteArrayLeft(example, 12, 4, new byte[2]), new byte[] {
+        // 1111 1100
+        (byte) 0xfc,
+        // 0110 0000
+        (byte) 0x60 });
   }
-  
+
   @Test
   public void testPermuteByteArrayByBit() {
     byte[] input = {
-        //0011 0111
-        (byte)0x37,
-        //1110 0010
-        (byte)0xe2
-    };
-    byte [] result = CryptoUtils.permuteByteArrayByBit(input, 0, new byte[2], new int[]{
-        15,
-        14,
-        13,
-        12,
-        11,
-        10,
-        9,
-        8,
-        7,
-        6,
-        5,
-        4,
-        3,
-        2,
-        1,
-        0
-    });
-    
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(input));
-    //System.out.println(CryptoUtils.byteArrayToBinaryString(result));
-    
-    assertArrayEquals(result , new byte[] {
-      //0100 0111
-      (byte)0x47,
-      //1110 1100
-      (byte)0xec
-    });
+        // 0011 0111
+        (byte) 0x37,
+        // 1110 0010
+        (byte) 0xe2 };
+    byte[] result = CryptoUtils.permuteByteArrayByBit(input, 0, new byte[2], new int[] { 15, 14, 13, 12, 11, 10, 9, 8,
+        7, 6, 5, 4, 3, 2, 1, 0 });
+
+    // System.out.println(CryptoUtils.byteArrayToBinaryString(input));
+    // System.out.println(CryptoUtils.byteArrayToBinaryString(result));
+
+    assertArrayEquals(result, new byte[] {
+        // 0100 0111
+        (byte) 0x47,
+        // 1110 1100
+        (byte) 0xec });
   }
-  
+
   @Test
   public void multiplyFiniteFieldsModifyingInputs() {
     byte[] a = new byte[1];
-    a[0] = (byte)0xea; //0x57
+    a[0] = (byte) 0xea; // 0x57
     byte[] b = new byte[1];
-    b[0] = (byte)0xc1; //0x83
+    b[0] = (byte) 0xc1; // 0x83
     byte[] p = new byte[1];
     byte[] truncFundPoly = new byte[1];
-    truncFundPoly[0] = (byte)0xd8; //0x1b
-    
+    truncFundPoly[0] = (byte) 0xd8; // 0x1b
+
     byte[] expectedP = new byte[1];
-    expectedP[0] = (byte)0x83; //0xc1
-    
+    expectedP[0] = (byte) 0x83; // 0xc1
+
     byte[] result = CryptoUtils.multiplyFiniteFieldsModifyingInputs(a, b, p, truncFundPoly);
-    
+
     assertArrayEquals(expectedP, result);
+  }
+
+  @Test
+  public void testArrayEquals() {
+    assertEquals(true, CryptoUtils.arrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 10, 12 }));
+    assertEquals(false, CryptoUtils.arrayEquals(new byte[] { 0, 9, 12 }, new byte[] { 0, 10, 12 }));
+    assertEquals(false, CryptoUtils.arrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 12 }));
+
+    byte[] a = new byte[] { 9, 7, 6, 56, 73, 45, 67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67, 9, 7, 6, 56, 73, 45,
+        67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67 };
+    byte[] b = new byte[] { 9, 5, 6, 56, 73, 45, 67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67, 9, 7, 6, 56, 73, 45,
+        67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67 };
+    byte[] c = new byte[] { 9, 7, 6, 56, 73, 45, 67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67, 9, 7, 6, 56, 73, 45,
+        67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67 };
+
+    assertEquals(false, CryptoUtils.arrayEquals(a, b));
+    assertEquals(true, CryptoUtils.arrayEquals(a, c));
   }
 
 }

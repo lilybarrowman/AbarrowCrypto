@@ -19,7 +19,6 @@ public class HasherRandom extends BufferedRandom {
   public HasherRandom(Hasher hashMaker, byte[] cryptoKey, Counter c) {
     super(hashMaker.getHashByteLength());
     hasher = hashMaker;
-    hasher.reset();
     key = cryptoKey;    
     counter = c;
   }
@@ -27,7 +26,6 @@ public class HasherRandom extends BufferedRandom {
   @Override
   protected void generateMoreBytes(byte[] data) {    
     hasher.addBytes(key).addBytes(counter.increment()).computeHash(data, 0);
-    hasher.reset();
   }
   
   public void resetCounter() {

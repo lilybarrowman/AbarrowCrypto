@@ -95,11 +95,13 @@ public class SHA3 extends Hasher {
       hashBlock(padded, 0);
     }
     CryptoUtils.fillWithZeroes(padded);
-    return CryptoUtils.safeLongArrayToByteArray(out, start, state, (outputBytes + 7) / 8, true);
+    byte[] result = CryptoUtils.safeLongArrayToByteArray(out, start, state, (outputBytes + 7) / 8, true);
+    reset();
+    return result;
   }
 
   @Override
-  public Hasher reset() {
+  protected void reset() {
     super.reset();
     if (state != null) {
       CryptoUtils.fillWithZeroes(state);
@@ -113,7 +115,6 @@ public class SHA3 extends Hasher {
       C = new long[5];
       stateInts = new int[50];
     }
-    return this;
   }
 
   @Override

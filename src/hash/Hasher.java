@@ -14,34 +14,31 @@ public abstract class Hasher {
   public Hasher() {
     reset();
   }  
-    
+  
   public Hasher addBytes(byte[] bytes) {
-    int blockBytes = getBlockBytes();
-    if (bytes == null) {
-      throw new IllegalArgumentException("Cannot hash a null array.");
-    }
+    return addBytes(bytes, 0, bytes.length);
+  }
     
-    if (bytes.length > 0) {
+  public Hasher addBytes(byte[] bytes, int start, int length) {
+    int blockBytes = getBlockBytes();
+    totalLength = totalLength.add(BigInteger.valueOf(length));
+    
+    if (length >= blockBytes - toHashPos) {
       
-      totalLength = totalLength.add(BigInteger.valueOf(bytes.length));
-      
-      if (bytes.length >= blockBytes - toHashPos) {
-        
-        System.arraycopy(bytes, 0, toHash, toHashPos, blockBytes - toHashPos);
-        hashBlock(toHash, 0);
-        CryptoUtils.fillWithZeroes(toHash);
-        int startPos = getBlockBytes() - toHashPos;
-        
-        while (bytes.length - startPos >= blockBytes) {
-          hashBlock(bytes, startPos);
-          startPos += blockBytes;
-        }
-        toHashPos = bytes.length - startPos;
-        System.arraycopy(bytes, startPos, toHash, 0, toHashPos);
-      } else {
-        System.arraycopy(bytes, 0, toHash, toHashPos, bytes.length);
-        toHashPos += bytes.length;
+      System.arraycopy(bytes, start, toHash, toHashPos, blockBytes - toHashPos);
+      hashBlock(toHash, 0);
+      CryptoUtils.fillWithZeroes(toHash);
+      int startPos = blockBytes - toHashPos + start; 
+      int end = start + length;
+      while (end - startPos >= blockBytes) {
+        hashBlock(bytes, startPos);
+        startPos += blockBytes;
       }
+      toHashPos = end - startPos;
+      System.arraycopy(bytes, startPos, toHash, 0, toHashPos);
+    } else {
+      System.arraycopy(bytes, start, toHash, toHashPos, length);
+      toHashPos += length;
     }
     
     return this;
@@ -56,7 +53,7 @@ public abstract class Hasher {
   }
 
   
-  public Hasher reset() {
+  protected void reset() {
     if (toHash == null){
        toHash = new byte[256];
     } else {
@@ -65,7 +62,6 @@ public abstract class Hasher {
     }
     toHashPos = 0;
     totalLength = BigInteger.ZERO;
-    return this;
   }
   
   public abstract int getBlockBytes();

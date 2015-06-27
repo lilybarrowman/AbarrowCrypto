@@ -272,10 +272,8 @@ public class ChatUI implements MouseMotionListener, MouseListener {
               keySalt = h.addBytes(rawKeySalt).computeHash();
               CryptoUtils.fillWithZeroes(rawKeySalt);
 
-              ivSalt = h.reset().addBytes(rawIvSalt).computeHash();
+              ivSalt = h.addBytes(rawIvSalt).computeHash();
               CryptoUtils.fillWithZeroes(rawIvSalt);
-
-              h.reset();
               isDoneHashingSalt = true;
               log("Raw entropy hashed.");
             }
@@ -323,7 +321,7 @@ public class ChatUI implements MouseMotionListener, MouseListener {
         @Override
         public void run() {
           byte[] passwordBytse = CryptoUtils.utf8CharArrayToByteAray(rawPassword, new byte[64]);
-          hashPassword = h.reset().addBytes(passwordBytse).computeHash();
+          hashPassword = h.addBytes(passwordBytse).computeHash();
           String keyIV = CryptoUtils.byteArrayToHexString(keySalt)
               + CryptoUtils.byteArrayToHexString(hmac.computeHash(hashPassword, keySalt));
           log("Your key IV string is [" + keyIV + "].");
@@ -373,9 +371,9 @@ public class ChatUI implements MouseMotionListener, MouseListener {
             log("Finished generating the main key, now generating sub keys.");
             isKeyReady = true;
 
-            byte[] hashedKey0 = h.reset().addBytes(key).computeHash();
-            byte[] hashedKey1 = h.reset().addBytes(hashedKey0).computeHash();
-            byte[] hashedKey2 = h.reset().addBytes(hashedKey1).computeHash();
+            byte[] hashedKey0 = h.addBytes(key).computeHash();
+            byte[] hashedKey1 = h.addBytes(hashedKey0).computeHash();
+            byte[] hashedKey2 = h.addBytes(hashedKey1).computeHash();
             byte[] aesKey = new byte[32];
             byte[] twoFishKey = new byte[32];
             byte[] serpentKey = new byte[32];
@@ -464,8 +462,7 @@ public class ChatUI implements MouseMotionListener, MouseListener {
   }
 
   private byte[] getNewIV() {
-    ivSalt = h.reset().addBytes(ivSalt).computeHash();
-    h.reset();
+    ivSalt = h.addBytes(ivSalt).computeHash();
     byte[] iv = new byte[16];
     System.arraycopy(ivSalt, 0, iv, 0, iv.length);
     return iv;

@@ -681,5 +681,17 @@ public class CryptoUtils {
     }
     return p;
   }
+  
+  public static boolean arrayEquals(byte[] a, byte[] b) {
+    int len = a.length;
+    if (len != b.length) {
+      return false;
+    }
+    int orred = 0;
+    for (int n = 0; n < len; n++) {
+      orred |= a[n] ^ b[n];
+    }
+    return (orred == 0);
+  }
 
 }
