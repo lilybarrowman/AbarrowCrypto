@@ -7,10 +7,10 @@ import java.util.Arrays;
 
 import core.CryptoUtils;
 
-public class SHA2_512 extends Hasher {
+public class SHA512 extends Hasher {
   
   private static final int BLOCK_BITS = 1024;
-  private static final int BLOCK_BYTES = SHA2_512.BLOCK_BITS / 8;
+  private static final int BLOCK_BYTES = SHA512.BLOCK_BITS / 8;
   private static final int MIN_PADDING_BYTES = 17;
 
   private static final long[] INITIAL_HASHES = new long[] { 0x6a09e667f3bcc908L, 0xbb67ae8584caa73bL,
@@ -41,7 +41,7 @@ public class SHA2_512 extends Hasher {
   private long[] W;
   byte[] padded;
   
-  public SHA2_512() {
+  public SHA512() {
     reset();
   }
 
@@ -53,7 +53,7 @@ public class SHA2_512 extends Hasher {
       fillPadding(padded, 0);
       hashBlock(padded, 0);
       
-    } else if ((SHA2_512.BLOCK_BYTES - copiedLength) < SHA2_512.MIN_PADDING_BYTES) {
+    } else if ((SHA512.BLOCK_BYTES - copiedLength) < SHA512.MIN_PADDING_BYTES) {
       System.arraycopy(toHash, 0, padded, 0, copiedLength);
       padded[copiedLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
       hashBlock(padded, 0);
@@ -125,12 +125,12 @@ public class SHA2_512 extends Hasher {
   protected void reset() {
     super.reset();
     if (hash == null) {
-      hash = Arrays.copyOf(SHA2_512.INITIAL_HASHES, 8);
-      padded = new byte[SHA2_512.BLOCK_BYTES];
+      hash = Arrays.copyOf(SHA512.INITIAL_HASHES, 8);
+      padded = new byte[SHA512.BLOCK_BYTES];
       W = new long[80];
 
     } else {
-      System.arraycopy(SHA2_512.INITIAL_HASHES, 0, hash, 0, 8);
+      System.arraycopy(SHA512.INITIAL_HASHES, 0, hash, 0, 8);
       CryptoUtils.fillWithZeroes(W);
       CryptoUtils.fillWithZeroes(padded);
     }
@@ -138,7 +138,7 @@ public class SHA2_512 extends Hasher {
 
   @Override
   public int getBlockBytes() {
-    return SHA2_512.BLOCK_BYTES;
+    return SHA512.BLOCK_BYTES;
   }
 
   @Override
