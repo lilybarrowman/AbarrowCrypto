@@ -1,12 +1,8 @@
 package hash.sha;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-
 import core.CryptoUtils;
-import hash.Hasher;
 
-public class SHA256 extends Hasher {
+public class SHA256 extends SHA32Hash {
   
   private static final int[] CONSTANTS = new int[]{
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -22,14 +18,8 @@ public class SHA256 extends Hasher {
   private static final int[] INITIAL_HASHES = new int[]{
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
   };
-  
-  private static final int MIN_PADDING_BYTES = 9;
-  
+    
   private static final int BLOCK_BYTES = 64;
-
-  byte[] padded;
-  private int[] hash;
-  private int[] W;
   
   @Override
   protected void hashBlock(byte[] data, int srcPos) {
@@ -68,40 +58,6 @@ public class SHA256 extends Hasher {
     hash[6] = g + hash[6];
     hash[7] = h + hash[7];
   }
-
-  @Override
-  public byte[] computeHash(byte[] out, int start) {
-    
-    int copiedLength = toHashPos;
-    if (copiedLength == 0) {
-      fillPadding(padded, 0);
-      hashBlock(padded, 0);
-    } else if ((SHA256.BLOCK_BYTES - copiedLength) < SHA256.MIN_PADDING_BYTES) {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      padded[copiedLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-      hashBlock(padded, 0);
-      Arrays.fill(padded, 0, padded.length, (byte)0);
-      appendWithLength(padded);
-      hashBlock(padded, 0);
-    } else {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      fillPadding(padded, copiedLength);
-      hashBlock(padded, 0);
-    }
-    CryptoUtils.fillWithZeroes(padded);
-    byte[] result = CryptoUtils.intArrayToByteArray(out, start, hash, false);
-    reset();
-    return result;
-  }
-
-  private void fillPadding(byte[] padded, int startIndex) {
-    padded[startIndex] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-    appendWithLength(padded);
-  }
-  
-  private void appendWithLength(byte[] padded) {
-    CryptoUtils.longToBytes(totalLength.multiply(BigInteger.valueOf(8)).longValue(), padded, padded.length - 8);
-  }
   
   @Override
   public int getBlockBytes() {
@@ -112,19 +68,15 @@ public class SHA256 extends Hasher {
   public int getHashByteLength() {
     return 32;
   }
-  
+
   @Override
-  protected void reset() {
-    super.reset();
-    if (hash == null) {
-      hash = Arrays.copyOf(SHA256.INITIAL_HASHES, 8);
-      W = new int[64];
-      padded = new byte[SHA256.BLOCK_BYTES];
-    } else {
-      System.arraycopy(SHA256.INITIAL_HASHES, 0, hash, 0, 8);
-      CryptoUtils.fillWithZeroes(W);
-      CryptoUtils.fillWithZeroes(padded);
-    }
+  protected int[] getInitialHashes() {
+    return SHA256.INITIAL_HASHES;
+  }
+
+  @Override
+  protected int getRounds() {
+    return 64;
   }
 
 }
