@@ -40,9 +40,21 @@ public class SHATest {
     assertEquals((new SHA1()).addString(hundredAndTwentySevenCharacterLong).computeHashString(), "fecc3ddfd3282caf5a5e1d31deac78cb26999719");
     assertEquals((new SHA1()).addString(hundredAndTwentyEightCharacterLong).computeHashString(), "03a2f36b0deb3d52becacc3a2802752d505c9097");
   }
+  
+  @Test
+  public void SHA256ProperlyHashesStrings() {
+    assertEquals((new SHA256()).addString(empty).computeHashString(), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    assertEquals((new SHA256()).addString(abc).computeHashString(), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    assertEquals((new SHA256()).addString(allYourBase).computeHashString(), "c2c565a8c7dc220ed7d9ff2f34b40dae7864ef0b8189557f0d3b7360ef34e1cd");
+    assertEquals((new SHA256()).addString(awfullyLongString).computeHashString(), "005d5abe7aaffbc2e6d5899eca829cefbe7e15420dd0f158400e0a03d7914991");
+    assertEquals((new SHA256()).addString(sixtyThreeCharacterLong).computeHashString(), "8c9024a5691a9045b2ea45d00909aa94b09a6e27a8f286f623f07907dca9fa93");
+    assertEquals((new SHA256()).addString(sixtyFourCharacterLong).computeHashString(), "eefa8642b73d9e4240387e421692bbe147ae6dfe288456207ad08095671bde59");
+    assertEquals((new SHA256()).addString(hundredAndTwentySevenCharacterLong).computeHashString(), "58df071da958a07ed070c68c46f73789328d7c9ca337307c8d2a7ae06469dba8");
+    assertEquals((new SHA256()).addString(hundredAndTwentyEightCharacterLong).computeHashString(), "49a2d408a22c1a6134d47a068eb51590d232b3be812c1355d8c6c69343e9a9ff");
+  }
 
   @Test
-  public void SHA2_512ProperlyHashesStrings() {
+  public void SHA2512ProperlyHashesStrings() {
     assertEquals(
         (new SHA512()).addString(empty).computeHashString(),
         "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");

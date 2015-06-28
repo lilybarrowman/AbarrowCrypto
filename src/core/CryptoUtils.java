@@ -450,6 +450,22 @@ public class CryptoUtils {
   public static long lowerSigmaOneFiveTwelve(long x) {
     return CryptoUtils.rotateLongRight(x, 19) ^ CryptoUtils.rotateLongRight(x, 61) ^ (x >>> 6);
   }
+  
+  public static int upperSigmaZeroTwoFiftySix(int x) {
+    return CryptoUtils.rotateIntRight(x, 2) ^ CryptoUtils.rotateIntRight(x, 13) ^ CryptoUtils.rotateIntRight(x, 22);
+  }
+
+  public static int upperSigmaOneTwoFiftySix(int x) {
+    return CryptoUtils.rotateIntRight(x, 6) ^ CryptoUtils.rotateIntRight(x, 11) ^ CryptoUtils.rotateIntRight(x, 25);
+  }
+
+  public static int lowerSigmaZeroTwoFiftySix(int x) {
+    return CryptoUtils.rotateIntRight(x, 7) ^ CryptoUtils.rotateIntRight(x, 18) ^ (x >>> 3);
+  }
+
+  public static int lowerSigmaOneTwoFiftySix(int x) {
+    return CryptoUtils.rotateIntRight(x, 17) ^ CryptoUtils.rotateIntRight(x, 19) ^ (x >>> 10);
+  }
 
   public static byte[] xorByteArrays(byte[] a, byte[] b) {
     if (a.length != b.length) {
