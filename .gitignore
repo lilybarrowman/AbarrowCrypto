@@ -9,6 +9,4 @@
 *.class
 
 #testresources
-*.jpg
-*.png
-*.wav
+/test/*
