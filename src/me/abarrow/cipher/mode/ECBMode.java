@@ -131,8 +131,9 @@ public class ECBMode implements Cipher {
   }
 
   @Override
-  public void removeKey() {
+  public Cipher removeKey() {
     core.removeKey();
+    return this;
   }
 
   

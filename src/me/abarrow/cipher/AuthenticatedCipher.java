@@ -33,7 +33,9 @@ public class AuthenticatedCipher implements Cipher {
     return new StreamRunnable() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        mac.tag(false).start(cipher.encrypt().start(in), out);
+        StreamRunnable encrypt = cipher.encrypt();
+        mac.tag(false).start(encrypt.start(in), out);
+        encrypt.throwIfFailed();
       }
     };
   }
@@ -43,7 +45,9 @@ public class AuthenticatedCipher implements Cipher {
     return new StreamRunnable() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        cipher.decrypt().start(mac.checkTag(false).start(in), out);
+        StreamRunnable checkTag = mac.checkTag(false);
+        cipher.decrypt().start(checkTag.start(in), out);
+        checkTag.throwIfFailed();
       }
     };
   }
@@ -60,8 +64,35 @@ public class AuthenticatedCipher implements Cipher {
   }
 
   @Override
-  public void removeKey() {
+  public Cipher removeKey() {
     cipher.removeKey();
+    return this;
+  }
+  
+  public AuthenticatedCipher setKeys(byte[] cipherKey, byte[] macKey) {
+    cipher.setKey(cipherKey);
+    mac.setMACKey(macKey);
+    return this;
+  }
+  
+  public AuthenticatedCipher removeKeys() {
+    removeKey();
+    removeMACKey();
+    return this;
+  }
+  
+  public AuthenticatedCipher setMACKey(byte[] key) {
+    mac.setMACKey(key);
+    return this;
+  }
+  
+  public boolean hasMACKey() {
+    return mac.hasMACKey();
+  }
+
+  public AuthenticatedCipher removeMACKey() {
+    mac.removeMACKey();
+    return this;
   }
   
   @Override

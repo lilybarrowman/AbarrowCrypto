@@ -35,6 +35,13 @@ public abstract class StreamRunnable implements Runnable {
     failure = failureReason;
   }
   
+  public synchronized final void throwIfFailed() throws IOException {
+    if (failure != null) {
+      throw failure;
+    }
+  }
+  
+  
   public synchronized final boolean didFail() {
     return (failure != null);
   }

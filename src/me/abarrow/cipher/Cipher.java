@@ -13,7 +13,7 @@ public interface Cipher {
   
   public Cipher setKey(byte[] key);
   public boolean hasKey();
-  public void removeKey();
+  public Cipher removeKey();
   
   public Cipher setIV(byte[] initVector);
   public byte[] getIV();

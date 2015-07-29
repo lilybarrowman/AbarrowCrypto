@@ -107,7 +107,7 @@ public class RC4 implements Cipher {
         throw new CryptoException(CryptoException.NO_KEY);
       }
     } else {
-      if (keyMac.hasKey()) {
+      if (keyMac.hasMACKey()) {
         if (hasIV()) {
           setAbsoluteKey(keyMac.tag(iv, true));
         } else {
@@ -161,7 +161,7 @@ public class RC4 implements Cipher {
   }
   
   private void setAbsoluteKey(byte[] key) {
-    removeKey();
+    removeAbsoluteKey();
     S = new byte[RC4.MAX_KEY_LENGTH];
     int i;
     
@@ -186,18 +186,22 @@ public class RC4 implements Cipher {
       setAbsoluteKey(key);
     } else {
       removeAbsoluteKey();
-      keyMac.setKey(key);
+      keyMac.setMACKey(key);
     }
     return this;
   }
 
   @Override
-  public void removeKey() {
-    
+  public Cipher removeKey() {
+    if (keyMac != null) {
+      keyMac.removeMACKey();
+    }
+    removeAbsoluteKey();
+    return this;
   }
   
   private void removeAbsoluteKey() {
-    if (!hasKey()) {
+    if (S == null) {
       return;
     }
     CryptoUtils.fillWithZeroes(S);
@@ -206,7 +210,11 @@ public class RC4 implements Cipher {
 
   @Override
   public boolean hasKey() {
-    return S != null;
+    if (keyMac == null) {
+      return S != null;
+    } else {
+      return keyMac.hasMACKey();
+    }
   }
 
   @Override

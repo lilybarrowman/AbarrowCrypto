@@ -208,8 +208,9 @@ public class CBCMode implements Cipher {
   }
 
   @Override
-  public void removeKey() {
+  public Cipher removeKey() {
     core.removeKey();
+    return this;
   }
   
   @Override

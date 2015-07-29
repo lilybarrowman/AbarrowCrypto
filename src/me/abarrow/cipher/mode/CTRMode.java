@@ -178,8 +178,9 @@ public class CTRMode implements Cipher {
   }
 
   @Override
-  public void removeKey() {
+  public Cipher removeKey() {
     core.removeKey();
+    return this;
   }
 
   @Override

@@ -1,5 +1,7 @@
 package me.abarrow.stream;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,6 +72,24 @@ public class DynamicByteQueue {
     }
   }
 
+  public void readTo(OutputStream out, int chunkSize) throws IOException {
+    byte[] block = new byte[chunkSize];
+    try {
+      while(true) {
+        int dataRead = read(block);
+        if (dataRead == chunkSize) {
+          out.write(block);
+        } else if (dataRead == -1) {
+          break;
+        } else {
+          out.write(block, 0, dataRead);
+        }
+      }
+    } finally {
+      CryptoUtils.fillWithZeroes(block);
+    }
+  }
+  
   public int read(byte[] bytes) {
     return read(bytes, 0, bytes.length);
   }

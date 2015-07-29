@@ -10,6 +10,7 @@ import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.Hasher;
 import me.abarrow.mac.MAC;
+import me.abarrow.stream.DynamicByteQueue;
 import me.abarrow.stream.StreamRunnable;
 
 public class HMAC implements MAC {
@@ -33,7 +34,7 @@ public class HMAC implements MAC {
 
   public HMAC(Hasher hashMaker, byte[] key) {
     this(hashMaker);
-    setKey(key);
+    setMACKey(key);
   }
 
   public byte[] computeHash(byte[] key, byte[] message) {
@@ -90,37 +91,138 @@ public class HMAC implements MAC {
     return new StreamRunnable() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        if (!hasKey()) {
-          throw new IOException(new CryptoException(CryptoException.NO_KEY));
-        }
-        boolean append = !tagOnly;
-        hasher.addBytes(iPadKey);
-        byte[] buffer = new byte[blockBytes];
-        while (true) {
-          int read = in.read(buffer);
-          if (read == blockBytes) {
-            hasher.addBytes(buffer);
-            if (append) {
-              out.write(buffer);
-            }
-          } else if (read == -1) {
-            break;
-          } else {
-            byte[] partialBlock = Arrays.copyOf(buffer, read);
-            hasher.addBytes(partialBlock);
-            if (append) {
-              out.write(partialBlock);
-            }
-            CryptoUtils.fillWithZeroes(partialBlock);
-          }
-        }
-        CryptoUtils.fillWithZeroes(buffer);
-        byte[] firstPass = hasher.computeHash();
-        hasher.addBytes(oPadKey).addBytes(firstPass);
-        CryptoUtils.fillWithZeroes(firstPass);
-        out.write(hasher.computeHash());
+        innerStream(tagOnly, true, in, out);
       }
     };
+  }
+  
+  private void innerStream(boolean tagOnly, boolean isTagging, InputStream in, OutputStream out) throws IOException {
+    if (!hasMACKey()) {
+      throw new IOException(new CryptoException(CryptoException.NO_KEY));
+    }
+    
+    boolean append = !tagOnly && isTagging;
+    boolean store = !isTagging && !tagOnly;
+    DynamicByteQueue queue = null;
+    byte[] messageMac = null;
+    if (store) {
+      queue = new DynamicByteQueue();
+    }
+    
+    hasher.addBytes(iPadKey);
+    
+    byte[] buffer = new byte[blockBytes];
+    byte[] old = new byte[blockBytes];
+    byte[] swap;
+    boolean hasRead = false;
+    while (true) {
+      int read = in.read(buffer);
+      if (read == blockBytes) {
+        if (hasRead) {
+          //do something with old
+          hasher.addBytes(old);
+          if (append) {
+            out.write(old);
+          } else if (store) {
+            queue.write(old);
+          }
+        }
+        swap = old;
+        old = buffer;
+        buffer = swap;
+      } else if (read == -1) {
+        if (hasRead) {
+          if (isTagging) {
+            //last complete block of plaintext
+            hasher.addBytes(old);
+            if (append) {
+              out.write(old);
+            }
+          } else {
+            //last block contains the hash
+            int macStartIndex = blockBytes - hashByteLength;
+            hasher.addBytes(old, 0, macStartIndex);
+            if (store) {
+              queue.write(old, 0, macStartIndex);
+            }
+            messageMac = Arrays.copyOfRange(old, macStartIndex, blockBytes);
+          }
+        } else {
+          if (!isTagging) {
+            throw new IOException(new CryptoException(CryptoException.NO_MAC));
+          } else {
+            //authenticate empty text
+            //ok I guess
+          }
+        }
+        break;
+      } else {
+        byte[] partialBlock = Arrays.copyOf(buffer, read);
+        if (isTagging) {
+          if (hasRead) {
+            hasher.addBytes(old);
+            if (append) {
+              out.write(old);
+            }
+          }
+          hasher.addBytes(partialBlock);
+          if (append) {
+            out.write(partialBlock);
+          }
+        } else {
+          if (read >= hashByteLength) {
+            //none of the old block is part of the hmac
+            if (hasRead) {
+              hasher.addBytes(old);
+              if (store) {
+                out.write(old);
+              }
+            }
+            int macStartIndex = read - hashByteLength;
+            //the partial block contains the hmac
+            messageMac = Arrays.copyOfRange(partialBlock, macStartIndex, read);
+            //the partial block might also contain some data to be hashed
+            hasher.addBytes(partialBlock, 0, macStartIndex);
+            if (store) {
+              out.write(partialBlock, 0, macStartIndex);
+            }
+          } else {
+            int macStartIndex = hashByteLength - read;
+            messageMac = new byte[hashByteLength];
+            //all of the partial block is part of the hmac
+            System.arraycopy(partialBlock, 0, messageMac, macStartIndex, read);
+            //some of the old block is part of the hmac
+            int oldMacIndex = blockBytes - macStartIndex;
+            System.arraycopy(old, oldMacIndex, messageMac, 0, macStartIndex);
+            //but some of the last block is data to be hashed
+            hasher.addBytes(old, 0, oldMacIndex);
+            if (store) {
+              out.write(old, 0, oldMacIndex);
+            }
+          }
+        }
+        CryptoUtils.fillWithZeroes(partialBlock);
+        break;
+      }
+    }
+    CryptoUtils.fillWithZeroes(buffer);
+    CryptoUtils.fillWithZeroes(old);
+
+    byte[] firstPass = hasher.computeHash();
+    hasher.addBytes(oPadKey).addBytes(firstPass);
+    CryptoUtils.fillWithZeroes(firstPass);
+    byte[] hash = hasher.computeHash();
+    if (!isTagging) {
+      if(!CryptoUtils.arrayEquals(hash, messageMac)) {
+        throw new IOException(new CryptoException(CryptoException.MAC_DOES_NOT_MATCH));
+      }
+    }
+    if (store) {
+      queue.doneWriting();
+      queue.readTo(out, blockBytes);
+    }
+    out.write(hash);
+    CryptoUtils.fillWithZeroes(hash);
   }
 
   @Override
@@ -129,7 +231,7 @@ public class HMAC implements MAC {
   }
 
   private byte[] innerTag(byte[] data, int start, int length, boolean tagOnly) throws CryptoException {
-    if (!hasKey()) {
+    if (!hasMACKey()) {
       throw new CryptoException(CryptoException.NO_KEY);
     }
     byte[] firstPass = hasher.addBytes(iPadKey).addBytes(data, start, length).computeHash();
@@ -145,57 +247,17 @@ public class HMAC implements MAC {
   }
   
   @Override
-  public StreamRunnable checkTag(boolean checkTagOnly) {
-    return null;/*
+  public StreamRunnable checkTag(final boolean checkTagOnly) {
     return new StreamRunnable(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        if (!hasKey()) {
-          throw new IOException(new CryptoException(CryptoException.NO_KEY));
-        }
-        hasher.addBytes(iPadKey);
-        byte[] buffer = new byte[hashByteLength];
-        byte[] oldBuffer = new byte[hashByteLength];
-        byte[] swap;
-        byte[] tag;
-        boolean hasRead = true;
-        while (true) {
-          int read = in.read(buffer);
-          if (read == hashByteLength) {
-            if (hasRead) {
-              hasher.addBytes(oldBuffer);
-            }
-            swap = oldBuffer;
-            oldBuffer = buffer;
-            buffer = swap;
-            hasRead = true;
-          } else if (read == -1) {
-            if (!hasRead) {
-              throw new IOException(new CryptoException(CryptoException.NO_MAC));
-            }
-            tag = oldBuffer;
-            break;
-          } else {
-            if (!hasRead) {
-              throw new IOException(new CryptoException(CryptoException.NO_MAC));
-            }            
-            int oldMacStart = hashByteLength - read;
-            tag = Arrays.copyOfRange(oldBuffer, oldMacStart, hashByteLength + oldMacStart);
-            System.arraycopy(buffer, 0, tag, oldMacStart, read);
-            hasher.addBytes(oldBuffer, 0, oldMacStart);
-            break;
-          }
-        }
-        byte[] firstPass = hasher.computeHash();
-        byte[] computedTag = hasher.addBytes(oPadKey).addBytes(firstPass).computeHash();
-       
-        
-        CryptoUtils.fillWithZeroes(buffer);
-        
-        CryptoUtils.fillWithZeroes(firstPass);
-        out.write(hasher);
+        innerStream(checkTagOnly, false, in, out);
+        //computer hash optionally buffering input
+        //if tag doesn't match throw
+        //optionally output buffered input
+        //output hash
       }
-    };*/
+    };
   }
 
   @Override
@@ -218,7 +280,7 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public void setKey(byte[] key) {
+  public void setMACKey(byte[] key) {
     byte[] padded = new byte[blockBytes];
 
     if (key.length > blockBytes) {
@@ -246,12 +308,12 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public boolean hasKey() {
+  public boolean hasMACKey() {
     return iPadKey != null;
   }
 
   @Override
-  public void removeKey() {
+  public void removeMACKey() {
     CryptoUtils.fillWithZeroes(iPadKey);
     CryptoUtils.fillWithZeroes(oPadKey);
     iPadKey = null;
