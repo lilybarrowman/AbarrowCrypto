@@ -1,5 +1,7 @@
 package me.abarrow.stream;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,6 +71,12 @@ public abstract class StreamRunnable implements Runnable {
       StreamUtils.quitelyClose(inp);
       throw e;
     }
+  }
+  
+  public final byte[] start(byte[] input) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    start(new ByteArrayInputStream(input), out);
+    return out.toByteArray();
   }
 
   public final OutputStream start(InputStream in, OutputStream out) throws IOException {

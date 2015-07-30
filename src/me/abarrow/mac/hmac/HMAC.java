@@ -241,7 +241,7 @@ public class HMAC implements MAC {
       return hasher.computeHash();
     } else {
       byte[] out = new byte[length + hashByteLength];
-      hasher.addBytes(data, start, length);
+      System.arraycopy(data, start, out, 0, length);
       return hasher.computeHash(out, length);
     }
   }
@@ -252,10 +252,6 @@ public class HMAC implements MAC {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         innerStream(checkTagOnly, false, in, out);
-        //computer hash optionally buffering input
-        //if tag doesn't match throw
-        //optionally output buffered input
-        //output hash
       }
     };
   }
