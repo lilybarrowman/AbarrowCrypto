@@ -1,6 +1,7 @@
 package me.abarrow.pbkdf2;
 
 import static org.junit.Assert.assertEquals;
+import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.sha.SHA1;
 import me.abarrow.mac.hmac.HMAC;
@@ -9,7 +10,7 @@ import org.junit.Test;
 
 public class PBKDF2Test {
   @Test
-  public void testHMAC() {
+  public void testHMAC() throws CryptoException {
     assertEquals("e1cb00b9817c198f4fdb29865387bdf8", CryptoUtils.byteArrayToHexString(PBKDF2.generateKey(new HMAC(
         new SHA1()), "howaboutthemapples".getBytes(), "cows".getBytes(), 1000, 16)));
     

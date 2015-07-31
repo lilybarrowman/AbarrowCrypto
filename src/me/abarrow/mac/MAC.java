@@ -13,9 +13,9 @@ public interface MAC {
   public StreamRunnable checkTag(boolean checkOnly);
   public byte[] checkTag(byte[] data, boolean checkOnly) throws CryptoException;
  
-  public void setMACKey(byte[] key);
+  public MAC setMACKey(byte[] key);
   public boolean hasMACKey();
-  public void removeMACKey();
+  public MAC removeMACKey();
 
   public int getTagLength();
 }

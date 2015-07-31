@@ -37,52 +37,6 @@ public class HMAC implements MAC {
     setMACKey(key);
   }
 
-  public byte[] computeHash(byte[] key, byte[] message) {
-    return computeHash(key, message, new byte[hashByteLength], 0);
-  }
-
-  public byte[] computeHash(byte[] key, byte[] message, byte[] out, int start) {
-    byte[] padded = new byte[blockBytes];
-    byte[] padKey = new byte[blockBytes];
-    byte[] padKeyHash = new byte[hashByteLength];
-
-    if (key.length > blockBytes) {
-      key = hasher.addBytes(key).computeHash();
-    }
-
-    if (key.length < blockBytes) {
-      // right pad with zereos
-      System.arraycopy(key, 0, padded, 0, key.length);
-      key = padded;
-    }
-
-    Arrays.fill(padKey, I_PAD_BYTE);
-    CryptoUtils.xorByteArrays(padKey, key, padKey);
-
-    hasher.addBytes(padKey).addBytes(message).computeHash(padKeyHash, 0);
-
-    Arrays.fill(padKey, O_PAD_BYTE);
-    CryptoUtils.xorByteArrays(padKey, key, padKey);
-
-    hasher.addBytes(padKey).addBytes(padKeyHash).computeHash(out, start);
-
-    CryptoUtils.fillWithZeroes(padded);
-    CryptoUtils.fillWithZeroes(padKey);
-    return out;
-  }
-
-  public boolean checkHash(byte[] key, byte[] message, byte[] hmac) {
-    return CryptoUtils.arrayEquals(computeHash(key, message), hmac);
-  }
-
-  public String computeHashString(byte[] key, byte[] message) {
-    return CryptoUtils.byteArrayToHexString(computeHash(key, message));
-  }
-
-  public String computeHashString(String key, String message) {
-    return CryptoUtils.byteArrayToHexString(computeHash(key.getBytes(), message.getBytes()));
-  }
-
   public int getHMACByteLength() {
     return hashByteLength;
   }
@@ -276,7 +230,10 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public void setMACKey(byte[] key) {
+  public MAC setMACKey(byte[] key) {
+    if (hasMACKey()) {
+      removeMACKey();
+    }
     byte[] padded = new byte[blockBytes];
 
     if (key.length > blockBytes) {
@@ -296,6 +253,7 @@ public class HMAC implements MAC {
     oPadKey = new byte[blockBytes];
     Arrays.fill(oPadKey, O_PAD_BYTE);
     CryptoUtils.xorByteArrays(oPadKey, key, oPadKey);
+    return this;
   }
 
   @Override
@@ -309,10 +267,11 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public void removeMACKey() {
+  public MAC removeMACKey() {
     CryptoUtils.fillWithZeroes(iPadKey);
     CryptoUtils.fillWithZeroes(oPadKey);
     iPadKey = null;
     oPadKey = null;
+    return this;
   }
 }
