@@ -1,16 +1,13 @@
 package me.abarrow.stream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 
 public abstract class StreamRunnable implements Runnable {
   private InputStream src;
   private OutputStream dest;
+  private InputStream related;
   private boolean closeOnEnd;
   private IOException failure;  
   
@@ -23,6 +20,7 @@ public abstract class StreamRunnable implements Runnable {
     } catch (IOException e) {
       e.printStackTrace();
       StreamUtils.quitelyClose(dest);
+      StreamUtils.quitelyClose(related);
       flagFailure(e);
     } finally {
       StreamUtils.quitelyClose(src);
@@ -55,28 +53,24 @@ public abstract class StreamRunnable implements Runnable {
   public final InputStream start(InputStream in) throws IOException {
     src = in;
     closeOnEnd = true;
-    PipedInputStream inp = new PipedInputStream() {
-      public final void close() throws IOException {
-        StreamUtils.quitelyClose(dest);
-        StreamUtils.quitelyClose(src);
-      }
-    };
-    try {
-      dest = new PipedOutputStream(inp);
-      Thread thread = new Thread(this);
-      thread.start();
-      return inp;
-    } catch (IOException e) {
-      StreamUtils.quitelyClose(dest);
-      StreamUtils.quitelyClose(inp);
-      throw e;
-    }
+    DynamicByteQueue q = new DynamicByteQueue();
+    dest = q.getOutputStream();
+    related = q.getInputStream();
+    Thread thread = new Thread(this);
+    thread.start();
+    return related;
   }
   
   public final byte[] start(byte[] input) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    start(new ByteArrayInputStream(input), out);
-    return out.toByteArray();
+    DynamicByteQueue inputBuffer = new DynamicByteQueue();
+    inputBuffer.write(input);
+    inputBuffer.doneWriting();
+    DynamicByteQueue outputBuffer = new DynamicByteQueue();
+    related = outputBuffer.getInputStream();
+    start(inputBuffer.getInputStream(), outputBuffer.getOutputStream(), true);
+    byte[] result = new byte[outputBuffer.available()];
+    outputBuffer.read(result);
+    return result;
   }
 
   public final OutputStream start(InputStream in, OutputStream out) throws IOException {

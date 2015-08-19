@@ -9,14 +9,7 @@ import org.junit.Test;
 public class DynamicByteQueueTest {
 
   @Test
-  public void test() throws InterruptedException {
-    testSameThread();
-    testManyReads();
-    testManyWrites();
-    testMultiThreaded();
-  }
-  
-  private void testMultiThreaded() throws InterruptedException {
+  public void testMultiThreaded() throws InterruptedException {
     StringBuilder builder = new StringBuilder();
     builder.append('M');
     for (int n = 0; n <4097; n++) {
@@ -56,7 +49,8 @@ public class DynamicByteQueueTest {
     writer.join();
   }
 
-  private void testManyWrites() {
+  @Test
+  public void testManyWrites() {
     byte[] testBytes = new byte[]{0, 1, 2};
     DynamicByteQueue d = new DynamicByteQueue();
     d.write(Arrays.copyOfRange(testBytes, 0, 1));
@@ -69,7 +63,8 @@ public class DynamicByteQueueTest {
     assert(d.read(readBuffer) == -1);
   }
   
-  private void testManyReads() {
+  @Test
+  public void testManyReads() {
     byte[] testBytes = new byte[]{0, 1, 2};
     DynamicByteQueue d = new DynamicByteQueue();
     d.write(testBytes);
@@ -83,8 +78,24 @@ public class DynamicByteQueueTest {
     assertArrayEquals(testBytes, new byte[] { readBufferA[0], readBufferB[0], readBufferC[0] } );
     assert(d.read(readBufferA) == -1);
   }
+  
+  @Test
+  public void testSkipping() {
+    byte[] testBytes = new byte[]{0, 1, 2};
+    DynamicByteQueue d = new DynamicByteQueue();
+    d.write(testBytes);
+    d.doneWriting();
+    byte[] readBufferB = new byte[1];
+    byte[] readBufferC = new byte[1];
+    d.skip(1);
+    d.read(readBufferB);
+    d.read(readBufferC);
+    assertArrayEquals(Arrays.copyOfRange(testBytes, 1, 3), new byte[] { readBufferB[0], readBufferC[0] } );
+    assert(d.read(readBufferB) == -1);
+  }
 
-  private void testSameThread() {
+  @Test
+  public void testSameThread() {
     byte[] testBytes = "Never trust an evil wizard.".getBytes();
     DynamicByteQueue d = new DynamicByteQueue();
     d.write(testBytes);

@@ -12,6 +12,7 @@ import me.abarrow.hash.Hasher;
 import me.abarrow.mac.MAC;
 import me.abarrow.stream.DynamicByteQueue;
 import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamUtils;
 
 public class HMAC implements MAC {
 
@@ -173,7 +174,7 @@ public class HMAC implements MAC {
     }
     if (store) {
       queue.doneWriting();
-      queue.readTo(out, blockBytes);
+      StreamUtils.copyStream(queue.getInputStream(), out, blockBytes);
     }
     out.write(hash);
     CryptoUtils.fillWithZeroes(hash);
