@@ -176,7 +176,9 @@ public class HMAC implements MAC {
       queue.doneWriting();
       StreamUtils.copyStream(queue.getInputStream(), out, blockBytes);
     }
-    out.write(hash);
+    if (isTagging) {
+      out.write(hash);
+    }
     CryptoUtils.fillWithZeroes(hash);
   }
 

@@ -35,13 +35,30 @@ public class HMACTest {
     System.arraycopy(data, 0, badlyTaggedData, 0, data.length);
 
     assertArrayEquals(expectedTag, mac.tag(data, true));
-    byte[] actual = mac.tag(data, false);
-    assertArrayEquals(taggedData, actual);
-    assertArrayEquals(expectedTag, mac.tag(data, true));
-
+    assertArrayEquals(taggedData, mac.tag(data, false));    
     assertArrayEquals(expectedTag, mac.tag(true).start(data));
     assertArrayEquals(taggedData, mac.tag(false).start(data));
+    
+    assertArrayEquals(data, mac.checkTag(taggedData, false));
+    assertArrayEquals(data, mac.checkTag(false).start(taggedData));
+
+    
+    try {
+      mac.checkTag(taggedData, true);
+    } catch (CryptoException e) {
+      fail(e.getMessage());
+    }
+    try {
+      mac.checkTag(true).start(taggedData);
+    } catch(IOException e) {
+      fail(e.getMessage());
+    }
+
+    
+    assertArrayEquals(taggedData, mac.tag(data, false));    
     assertArrayEquals(expectedTag, mac.tag(true).start(data));
+    assertArrayEquals(taggedData, mac.tag(false).start(data));
+    
 
     try {
       mac.checkTag(badlyTaggedData, false);
