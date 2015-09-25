@@ -61,16 +61,12 @@ public abstract class StreamRunnable implements Runnable {
     return related;
   }
   
+  public final ByteProcess start() {
+    return new ByteProcess(this);
+  }
+  
   public final byte[] start(byte[] input) throws IOException {
-    DynamicByteQueue inputBuffer = new DynamicByteQueue();
-    inputBuffer.write(input);
-    inputBuffer.doneWriting();
-    DynamicByteQueue outputBuffer = new DynamicByteQueue();
-    related = outputBuffer.getInputStream();
-    start(inputBuffer.getInputStream(), outputBuffer.getOutputStream(), true);
-    byte[] result = new byte[outputBuffer.available()];
-    outputBuffer.read(result);
-    return result;
+    return start().add(input).finish();
   }
 
   public final OutputStream start(InputStream in, OutputStream out) throws IOException {
