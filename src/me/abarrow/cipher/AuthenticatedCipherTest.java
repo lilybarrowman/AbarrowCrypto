@@ -7,6 +7,7 @@ import java.io.IOException;
 import me.abarrow.cipher.aes.AES;
 import me.abarrow.cipher.mode.CTRMode;
 import me.abarrow.cipher.mode.ECBMode;
+import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.sha.SHA256;
 import me.abarrow.mac.MAC;
@@ -19,7 +20,7 @@ import org.junit.Test;
 public class AuthenticatedCipherTest {
 
   @Test
-  public void test() throws IOException {
+  public void test() throws IOException, CryptoException {
     byte[] cipherKey = "catsareevil".getBytes();
     byte[] macKey = "dogsareevil".getBytes();
     String plainString = "I blame the angry foxes for her death!";

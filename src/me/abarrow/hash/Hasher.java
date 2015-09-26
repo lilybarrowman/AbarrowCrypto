@@ -1,80 +1,65 @@
 package me.abarrow.hash;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import me.abarrow.core.CryptoUtils;
+import me.abarrow.stream.StreamRunnable;
 
 public abstract class Hasher {
   
   
-  protected BigInteger totalLength;
-  protected byte[] toHash;
-  protected int toHashPos;
-  
   public Hasher() {
     reset();
-  }  
-  
-  public Hasher addBytes(byte[] bytes) {
-    return addBytes(bytes, 0, bytes.length);
-  }
-    
-  public Hasher addBytes(byte[] bytes, int start, int length) {
-    int blockBytes = getBlockBytes();
-    totalLength = totalLength.add(BigInteger.valueOf(length));
-    
-    if (length >= blockBytes - toHashPos) {
-      
-      System.arraycopy(bytes, start, toHash, toHashPos, blockBytes - toHashPos);
-      hashBlock(toHash, 0);
-      CryptoUtils.fillWithZeroes(toHash);
-      int startPos = blockBytes - toHashPos + start; 
-      int end = start + length;
-      while (end - startPos >= blockBytes) {
-        hashBlock(bytes, startPos);
-        startPos += blockBytes;
-      }
-      toHashPos = end - startPos;
-      System.arraycopy(bytes, startPos, toHash, 0, toHashPos);
-    } else {
-      System.arraycopy(bytes, start, toHash, toHashPos, length);
-      toHashPos += length;
-    }
-    
-    return this;
   }
   
   protected abstract void hashBlock(byte[] data, int srcPos);
   
-  public abstract byte[] computeHash(byte[] out, int start);
+  protected abstract byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength);
   
-  public final byte[] computeHash() {
-    return computeHash(new byte[getHashByteLength()], 0);
+  public final StreamRunnable hash() {
+    return new StreamRunnable(){
+      @Override
+      public void process(InputStream in, OutputStream out) throws IOException {
+        reset();
+        BigInteger totalLength = BigInteger.ZERO;
+        int blockBytes = getBlockBytes();
+        
+        byte[] temp = new byte[blockBytes];
+        int read = 0;
+        while(true) {
+          read = in.read(temp);
+          read = read == -1 ? 0 : read;
+          totalLength = totalLength.add(BigInteger.valueOf(read));
+          if (read == blockBytes) {
+            hashBlock(temp, 0);
+          } else {
+            Arrays.fill(temp, read, blockBytes, CryptoUtils.ZERO_BYTE);
+            break;
+          }
+        }
+        byte[] hashed = computeHash(totalLength, temp, read);
+        out.write(hashed);
+        CryptoUtils.fillWithZeroes(hashed);
+        CryptoUtils.fillWithZeroes(temp);
+        reset();
+      }
+    };
   }
-
   
+  
+  /**
+   * Resets any internal state of a hasher.
+   */
   protected void reset() {
-    if (toHash == null){
-       toHash = new byte[256];
-    } else {
-      //security paranoia
-      CryptoUtils.fillWithZeroes(toHash);
-    }
-    toHashPos = 0;
-    totalLength = BigInteger.ZERO;
   }
   
   public abstract int getBlockBytes();
   
   public abstract int getHashByteLength();
   
-  public final Hasher addString(String string) {
-    addBytes(string.getBytes());
-    return this;
-  }
-  
-  public String computeHashString() {
-    return CryptoUtils.byteArrayToHexString(computeHash());
-  }
 
 }

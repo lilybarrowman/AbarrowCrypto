@@ -38,46 +38,39 @@ public class SHA512 extends Hasher {
   private long[] hash;
   
   private long[] W;
-  byte[] padded;
   
   public SHA512() {
     reset();
   }
 
   @Override
-  public byte[] computeHash(byte[] out, int start) {
-    int copiedLength = toHashPos;
-    
-    if (copiedLength == 0) {
-      fillPadding(padded, 0);
-      hashBlock(padded, 0);
-      
-    } else if ((SHA512.BLOCK_BYTES - copiedLength) < SHA512.MIN_PADDING_BYTES) {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      padded[copiedLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-      hashBlock(padded, 0);
+  protected final byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength) {    
+    if (remainderLength == 0) {
+      fillPadding(dataLength, remainder, 0);
+      hashBlock(remainder, 0);
+    } else if ((SHA512.BLOCK_BYTES - remainderLength) < SHA512.MIN_PADDING_BYTES) {
+      remainder[remainderLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
+      hashBlock(remainder, 0);
                 
-      Arrays.fill(padded, 0, padded.length, (byte)0);
-      appendWithLength(padded);
-      hashBlock(padded, 0);
+      Arrays.fill(remainder, 0, remainder.length, (byte)0);
+      appendWithLength(dataLength, remainder);
+      hashBlock(remainder, 0);
     } else {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      fillPadding(padded, copiedLength);
-      hashBlock(padded, 0);
+      fillPadding(dataLength, remainder, remainderLength);
+      hashBlock(remainder, 0);
     }
-    CryptoUtils.fillWithZeroes(padded);
-    byte[] result = CryptoUtils.longArrayToByteArray(out, start, hash, hash.length, false);
+    byte[] result = CryptoUtils.longArrayToByteArray(new byte[getHashByteLength()], 0, hash, hash.length, false);
     reset();
     return result;
   }
   
-  private void fillPadding(byte[] padded, int startIndex) {
+  private void fillPadding(BigInteger dataLength, byte[] padded, int startIndex) {
     padded[startIndex] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-    appendWithLength(padded);
+    appendWithLength(dataLength, padded);
   }
   
-  private void appendWithLength(byte[] padded) {
-    CryptoUtils.fillLastBytes(totalLength.multiply(BigInteger.valueOf(8)).toByteArray(), padded, 16);
+  private void appendWithLength(BigInteger dataLength, byte[] padded) {
+    CryptoUtils.fillLastBytes(dataLength.multiply(BigInteger.valueOf(8)).toByteArray(), padded, 16);
   }
   
   protected void hashBlock(byte[] bytes, int start) {
@@ -125,13 +118,10 @@ public class SHA512 extends Hasher {
     super.reset();
     if (hash == null) {
       hash = Arrays.copyOf(SHA512.INITIAL_HASHES, 8);
-      padded = new byte[SHA512.BLOCK_BYTES];
       W = new long[80];
-
     } else {
       System.arraycopy(SHA512.INITIAL_HASHES, 0, hash, 0, 8);
       CryptoUtils.fillWithZeroes(W);
-      CryptoUtils.fillWithZeroes(padded);
     }
   }
 

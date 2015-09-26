@@ -75,7 +75,7 @@ public class SHA256 extends SHA32Hash {
   }
 
   @Override
-  protected int getRounds() {
+  protected int getWLength() {
     return 64;
   }
 

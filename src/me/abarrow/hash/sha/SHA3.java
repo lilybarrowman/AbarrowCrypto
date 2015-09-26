@@ -1,5 +1,7 @@
 package me.abarrow.hash.sha;
 
+import java.math.BigInteger;
+
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.Hasher;
 
@@ -19,7 +21,6 @@ public class SHA3 extends Hasher {
    * col 4 row 4 depth 1599 -> [4][4][63] -> 1599
    */
   private long[] state;
-  private byte[] padded;
   private long[] stateCopy;
   private long[] C;
   private int[] stateInts;
@@ -58,44 +59,38 @@ public class SHA3 extends Hasher {
     } else {
       throw new IllegalArgumentException("SHA3 cannot have an ouput size of " + outputSize + " bytes.");
     }
-    padded = new byte[blockBytes];
     reset();
   }
 
   @Override
-  public byte[] computeHash(byte[] out, int start) {
-    int copiedLength = toHashPos;
-
-    if (copiedLength == 0) {
+  protected final byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength) {
+    if (remainderLength == 0) {
       if (mode == SHA3Mode.KECCAK) {
-        padded[0] = (byte) 0x1; // Keccak 0000 0001
+        remainder[0] = (byte) 0x1; // Keccak 0000 0001
       } else {
-        padded[0] = (byte) 0x6; // SHA3 0000 0110
+        remainder[0] = (byte) 0x6; // SHA3 0000 0110
       }
-      padded[blockBytes - 1] = (byte) 0x80; // 1000 0000
-      hashBlock(padded, 0);
+      remainder[blockBytes - 1] = (byte) 0x80; // 1000 0000
+      hashBlock(remainder, 0);
 
-    } else if (copiedLength == (blockBytes - 1)) {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
+    } else if (remainderLength == (blockBytes - 1)) {
       if (mode == SHA3Mode.KECCAK) {
-        padded[copiedLength] = (byte) 0x81; // Keccak 1000 0110
+        remainder[remainderLength] = (byte) 0x81; // Keccak 1000 0110
       } else {
-        padded[copiedLength] = (byte) 0x86; // SHA3 1000 0110
+        remainder[remainderLength] = (byte) 0x86; // SHA3 1000 0110
       }
-      hashBlock(padded, 0);
+      hashBlock(remainder, 0);
 
     } else {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
       if (mode == SHA3Mode.KECCAK) {
-        padded[copiedLength] = (byte) 0x1; // Keccak 0000 0001
+        remainder[remainderLength] = (byte) 0x1; // Keccak 0000 0001
       } else {
-        padded[copiedLength] = (byte) 0x6; // SHA3 0000 0110
+        remainder[remainderLength] = (byte) 0x6; // SHA3 0000 0110
       }
-      padded[blockBytes - 1] = (byte) 0x80; // 1000 0000
-      hashBlock(padded, 0);
+      remainder[blockBytes - 1] = (byte) 0x80; // 1000 0000
+      hashBlock(remainder, 0);
     }
-    CryptoUtils.fillWithZeroes(padded);
-    byte[] result = CryptoUtils.safeLongArrayToByteArray(out, start, state, (outputBytes + 7) / 8, true);
+    byte[] result = CryptoUtils.safeLongArrayToByteArray(new byte[getHashByteLength()], 0, state, (outputBytes + 7) / 8, true);
     reset();
     return result;
   }
@@ -108,7 +103,6 @@ public class SHA3 extends Hasher {
       CryptoUtils.fillWithZeroes(stateCopy);
       CryptoUtils.fillWithZeroes(stateInts);
       CryptoUtils.fillWithZeroes(C);
-      CryptoUtils.fillWithZeroes(padded);
     } else {
       state = new long[25];
       stateCopy = new long[25];

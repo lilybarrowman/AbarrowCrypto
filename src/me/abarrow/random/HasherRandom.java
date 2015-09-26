@@ -1,5 +1,7 @@
 package me.abarrow.random;
 
+import java.io.IOException;
+
 import me.abarrow.counter.BigIntCounter;
 import me.abarrow.counter.Counter;
 import me.abarrow.hash.Hasher;
@@ -25,7 +27,11 @@ public class HasherRandom extends BufferedRandom {
   
   @Override
   protected void generateMoreBytes(byte[] data) {    
-    hasher.addBytes(key).addBytes(counter.increment()).computeHash(data, 0);
+    try {
+      hasher.hash().start().add(key).add(counter.increment()).finish(data, 0);
+    } catch (IOException e) {
+      //there's little we can do about this
+    }
   }
   
   public void resetCounter() {

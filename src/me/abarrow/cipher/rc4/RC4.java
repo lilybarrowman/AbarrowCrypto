@@ -34,11 +34,11 @@ public class RC4 implements Cipher {
     keyMac = keyMakingMAC;
   }
   
-  public RC4(MAC keyMakingMAC, byte[] key) {  
+  public RC4(MAC keyMakingMAC, byte[] key) throws CryptoException {  
     this(keyMakingMAC, key, 0);
   }
   
-  public RC4(MAC keyMakingMAC, byte[] key, int bytesToDrop) {
+  public RC4(MAC keyMakingMAC, byte[] key, int bytesToDrop) throws CryptoException {
     keyMac = keyMakingMAC;
     setKey(key);
     prependingIV = keyMakingMAC != null;
@@ -181,7 +181,7 @@ public class RC4 implements Cipher {
   }
 
   @Override
-  public Cipher setKey(byte[] key) {
+  public Cipher setKey(byte[] key) throws CryptoException {
     if (keyMac == null) {
       setAbsoluteKey(key);
     } else {

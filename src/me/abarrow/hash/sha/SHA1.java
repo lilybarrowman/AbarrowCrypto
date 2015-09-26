@@ -68,7 +68,7 @@ public class SHA1 extends SHA32Hash {
   }
 
   @Override
-  protected int getRounds() {
+  protected int getWLength() {
     return 80;
   }
 

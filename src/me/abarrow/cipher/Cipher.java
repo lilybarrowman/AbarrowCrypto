@@ -11,7 +11,7 @@ public interface Cipher {
   public StreamRunnable encrypt();
   public StreamRunnable decrypt();
   
-  public Cipher setKey(byte[] key);
+  public Cipher setKey(byte[] key) throws CryptoException;
   public boolean hasKey();
   public Cipher removeKey();
   

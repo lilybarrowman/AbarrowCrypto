@@ -53,7 +53,7 @@ public class AuthenticatedCipher implements Cipher {
   }
 
   @Override
-  public Cipher setKey(byte[] key) {
+  public Cipher setKey(byte[] key) throws CryptoException {
     cipher.setKey(key);
     return this;
   }
@@ -69,7 +69,7 @@ public class AuthenticatedCipher implements Cipher {
     return this;
   }
   
-  public AuthenticatedCipher setKeys(byte[] cipherKey, byte[] macKey) {
+  public AuthenticatedCipher setKeys(byte[] cipherKey, byte[] macKey) throws CryptoException {
     cipher.setKey(cipherKey);
     mac.setMACKey(macKey);
     return this;
@@ -81,7 +81,7 @@ public class AuthenticatedCipher implements Cipher {
     return this;
   }
   
-  public AuthenticatedCipher setMACKey(byte[] key) {
+  public AuthenticatedCipher setMACKey(byte[] key) throws CryptoException {
     mac.setMACKey(key);
     return this;
   }
