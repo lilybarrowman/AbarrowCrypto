@@ -1,12 +1,9 @@
 package me.abarrow.hash.md;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-
 import me.abarrow.core.CryptoUtils;
-import me.abarrow.hash.Hasher;
+import me.abarrow.hash.sha.SHA32Hash;
 
-public class MD5 extends Hasher {
+public class MD5 extends SHA32Hash {
 
   private static final int[] s = new int[] { 7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21, };
 
@@ -23,55 +20,7 @@ public class MD5 extends Hasher {
 
   private static final int BLOCK_BITS = 512;
   private static final int BLOCK_BYTES = MD5.BLOCK_BITS / 8;
-  private static final int MIN_PADDING_BYTES = 9;
-
-  private int[] hash;
-
-  private int[] M;
-  byte[] padded;
-
-  public MD5() {
-    reset();
-  }
-
-  @Override
-  public byte[] computeHash(byte[] out, int start) {
-
-    int copiedLength = toHashPos;
-
-    if (copiedLength == 0) {
-      fillPadding(padded, 0);
-      hashBlock(padded, 0);
-    } else if ((MD5.BLOCK_BYTES - copiedLength) < MD5.MIN_PADDING_BYTES) {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      padded[copiedLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-      hashBlock(padded, 0);
-
-      Arrays.fill(padded, 0, padded.length, (byte) 0);
-      appendWithLength(padded);
-      hashBlock(padded, 0);
-    } else {
-      System.arraycopy(toHash, 0, padded, 0, copiedLength);
-      fillPadding(padded, copiedLength);
-      hashBlock(padded, 0);
-    }
-    
-    CryptoUtils.fillWithZeroes(padded);
-    byte[] result = CryptoUtils.intArrayToByteArray(out, start, hash, true);
-    reset();
-    return result;
-    
-  }
-
-  private void fillPadding(byte[] padded, int startIndex) {
-    padded[startIndex] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-    appendWithLength(padded);
-  }
-
-  private void appendWithLength(byte[] padded) {
-    CryptoUtils.longToBytes(totalLength.multiply(BigInteger.valueOf(8)).longValue(), padded, padded.length - 8, true);
-  }
-
+  
   protected void hashBlock(byte[] bytes, int start) {
     int A = hash[0];
     int B = hash[1];
@@ -84,7 +33,7 @@ public class MD5 extends Hasher {
 
     for (int i = 0; i < 64; i++) {
       if (i < 16) {
-        M[i] = CryptoUtils.intFromBytes(bytes, start + i * 4, true);
+        W[i] = CryptoUtils.intFromBytes(bytes, start + i * 4, true);
         F = (B & C) | ((~B) & D);
         g = i;
       } else if (i < 32) {
@@ -97,7 +46,7 @@ public class MD5 extends Hasher {
         F = C ^ (B | (~D));
         g = (7 * i) % 16;
       }
-      temp = B + CryptoUtils.rotateIntLeft(A + F + MD5.K[i] + M[g], MD5.s[i % 4 + 4 * (i / 16)]);
+      temp = B + CryptoUtils.rotateIntLeft(A + F + MD5.K[i] + W[g], MD5.s[i % 4 + 4 * (i / 16)]);
       A = D;
       D = C;
       C = B;
@@ -111,26 +60,27 @@ public class MD5 extends Hasher {
   }
 
   @Override
-  protected void reset() {
-    super.reset();
-    if (hash == null) {
-      hash = Arrays.copyOf(MD5.INITIAL_HASHES, 4);
-      M = new int[16];
-      padded = new byte[MD5.BLOCK_BYTES];
-    } else {
-      CryptoUtils.fillWithZeroes(padded);
-      CryptoUtils.fillWithZeroes(M);
-      System.arraycopy(MD5.INITIAL_HASHES, 0, hash, 0, 4);
-    }
-  }
-
-  @Override
   public int getBlockBytes() {
     return MD5.BLOCK_BYTES;
   }
 
   @Override
   public int getHashByteLength() {
+    return 16;
+  }
+
+  @Override
+  protected int[] getInitialHashes() {
+    return MD5.INITIAL_HASHES;
+  }
+  
+  @Override
+  public boolean isHashLittleEndian() {
+    return true;
+  }
+
+  @Override
+  protected int getWLength() {
     return 16;
   }
 
