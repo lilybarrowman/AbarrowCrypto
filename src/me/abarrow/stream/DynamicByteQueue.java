@@ -258,5 +258,9 @@ public class DynamicByteQueue {
     firstChunkIndex += bytesRead;
     return bytesRead;
   }
+  
+  public boolean isDoneWriting() {
+    return doneAdding.get();
+  }
 
 }

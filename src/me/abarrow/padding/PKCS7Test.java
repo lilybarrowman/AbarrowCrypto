@@ -25,7 +25,7 @@ public class PKCS7Test {
       CryptoException {
     PKCS7 padding = new PKCS7(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.pad().start(new ByteArrayInputStream(input), o);
+    padding.pad().startSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.pad(input));
   }
@@ -33,7 +33,7 @@ public class PKCS7Test {
   public void testUnpad(int blockSize, byte[] input, byte[] expected) throws InterruptedException, IOException {
     PKCS7 padding = new PKCS7(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.unpad().start(new ByteArrayInputStream(input), o);
+    padding.unpad().startSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.unpad(input));
   }

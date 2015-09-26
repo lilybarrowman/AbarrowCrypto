@@ -7,11 +7,18 @@ import me.abarrow.core.CryptoUtils;
 public final class ByteProcess {
   
   private DynamicByteQueue pre;
+  private DynamicByteQueue post;
   private StreamRunnable runnable;
+  private boolean isAsync;
   
-  public ByteProcess(StreamRunnable r) {
+  public ByteProcess(boolean async, StreamRunnable r) {
     pre = new DynamicByteQueue();
+    post = new DynamicByteQueue();
     runnable = r;
+    isAsync = async;
+    if (async) {
+      runnable.startAsync(pre.getInputStream(), post.getOutputStream(), true);
+    }
   }
   
   
@@ -22,17 +29,29 @@ public final class ByteProcess {
   public ByteProcess add(byte[] bytes) {
     return add(bytes, 0, bytes.length);
   }
-  public byte[] finish () throws IOException {
+  public byte[] finishSync() throws IOException {
     pre.doneWriting();
-    DynamicByteQueue outputBuffer = new DynamicByteQueue();
-    runnable.start(pre.getInputStream(), outputBuffer.getOutputStream(), true);
-    byte[] result = new byte[outputBuffer.available()];
-    outputBuffer.read(result);
+    if (!isAsync) {
+      post = new DynamicByteQueue();
+      runnable.startSync(pre.getInputStream(), post.getOutputStream(), true);
+    } else {
+      while (!post.isDoneWriting()) {
+        try {
+          Thread.sleep(0);
+        } catch (InterruptedException e) {
+          post.doneReading();
+          throw new IOException(e);
+        }
+      }
+    }
+    
+    byte[] result = new byte[post.available()];
+    post.read(result);
     return result;
   }
   
-  public byte[] finish (byte[] out, int start) throws IOException {
-    byte[] res = finish();
+  public byte[] finishSync(byte[] out, int start) throws IOException {
+    byte[] res = finishSync();
     System.arraycopy(res, 0, out, start, res.length);
     CryptoUtils.fillWithZeroes(res);
     return out;

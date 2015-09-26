@@ -36,7 +36,7 @@ public class SHATest {
 
   
   private String testCase(Hasher h, String testString) throws IOException {
-    return CryptoUtils.byteArrayToHexString(h.hash().start(testString.getBytes()));
+    return CryptoUtils.byteArrayToHexString(h.hash().startSync(testString.getBytes()));
   }
   
   private String SHA1Case(String testString) throws IOException {

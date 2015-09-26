@@ -32,28 +32,28 @@ public class AuthenticatedCipherTest {
     
     Cipher cipher = new ECBMode(new AES(), new ZeroPadding());
     cipher.setKey(cipherKey);
-    byte[] encrypted = cipher.encrypt().start(plain);
+    byte[] encrypted = cipher.encrypt().startSync(plain);
     assertArrayEquals(expectedEncrypted, encrypted);
     
     MAC mac = new HMAC(new SHA256());
     mac.setMACKey(macKey);
-    byte[] tagged =  mac.tag(false).start(encrypted);
+    byte[] tagged =  mac.tag(false).startSync(encrypted);
     assertArrayEquals(expectedTagged, tagged);
     
-    byte[] unTagged = mac.checkTag(false).start(tagged);
+    byte[] unTagged = mac.checkTag(false).startSync(tagged);
     assertArrayEquals(expectedEncrypted, unTagged);
 
-    byte[] decrypted = cipher.decrypt().start(unTagged);
+    byte[] decrypted = cipher.decrypt().startSync(unTagged);
     String decryptedString = new String(decrypted).replace("\0", "");
     assertEquals(plainString, decryptedString);    
     
     AuthenticatedCipher authCipher = new AuthenticatedCipher(new ECBMode(new AES(), new ZeroPadding()), new HMAC(new SHA256()));
     authCipher.setKey(cipherKey);
     authCipher.setMACKey(macKey);
-    byte[] authEncrypted = authCipher.encrypt().start(plain);
+    byte[] authEncrypted = authCipher.encrypt().startSync(plain);
     assertArrayEquals(expectedTagged, authEncrypted);
 
-    byte[] authDecrypted = authCipher.decrypt().start(authEncrypted);
+    byte[] authDecrypted = authCipher.decrypt().startSync(authEncrypted);
     String authDecryptedString = new String(authDecrypted).replace("\0", "");
     assertEquals(plainString, authDecryptedString);    
 

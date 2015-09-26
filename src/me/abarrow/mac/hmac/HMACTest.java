@@ -36,11 +36,11 @@ public class HMACTest {
 
     assertArrayEquals(expectedTag, mac.tag(data, true));
     assertArrayEquals(taggedData, mac.tag(data, false));    
-    assertArrayEquals(expectedTag, mac.tag(true).start(data));
-    assertArrayEquals(taggedData, mac.tag(false).start(data));
+    assertArrayEquals(expectedTag, mac.tag(true).startSync(data));
+    assertArrayEquals(taggedData, mac.tag(false).startSync(data));
     
     assertArrayEquals(data, mac.checkTag(taggedData, false));
-    assertArrayEquals(data, mac.checkTag(false).start(taggedData));
+    assertArrayEquals(data, mac.checkTag(false).startSync(taggedData));
 
     
     try {
@@ -49,15 +49,15 @@ public class HMACTest {
       fail(e.getMessage());
     }
     try {
-      mac.checkTag(true).start(taggedData);
+      mac.checkTag(true).startSync(taggedData);
     } catch(IOException e) {
       fail(e.getMessage());
     }
 
     
     assertArrayEquals(taggedData, mac.tag(data, false));    
-    assertArrayEquals(expectedTag, mac.tag(true).start(data));
-    assertArrayEquals(taggedData, mac.tag(false).start(data));
+    assertArrayEquals(expectedTag, mac.tag(true).startSync(data));
+    assertArrayEquals(taggedData, mac.tag(false).startSync(data));
     
 
     try {
@@ -73,13 +73,13 @@ public class HMACTest {
     }
 
     try {
-      mac.checkTag(false).start(badlyTaggedData);
+      mac.checkTag(false).startSync(badlyTaggedData);
       fail("Checking badlyTaggedData was ok.");
     } catch (IOException e) {
     }
 
     try {
-      mac.checkTag(true).start(badlyTaggedData);
+      mac.checkTag(true).startSync(badlyTaggedData);
       fail("Checking badlyTaggedData was ok.");
     } catch (IOException e) {
     }

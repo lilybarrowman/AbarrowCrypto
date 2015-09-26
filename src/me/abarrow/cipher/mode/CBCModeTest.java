@@ -40,12 +40,12 @@ public class CBCModeTest {
     Cipher cbcMode = new CBCMode(new AES(key), padding, iv).setIVPrepending(false);
     
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    cbcMode.encrypt().start(new ByteArrayInputStream(plainText), o);
+    cbcMode.encrypt().startSync(new ByteArrayInputStream(plainText), o);
     assertArrayEquals(expectedCipherText, cbcMode.encrypt(plainText));
     assertArrayEquals(expectedCipherText,  o.toByteArray());
 
     o = new ByteArrayOutputStream();
-    cbcMode.decrypt().start(new ByteArrayInputStream(expectedCipherText), o);
+    cbcMode.decrypt().startSync(new ByteArrayInputStream(expectedCipherText), o);
     assertArrayEquals(expectedPlainText, cbcMode.decrypt(expectedCipherText));
     assertArrayEquals(expectedPlainText, o.toByteArray());
     

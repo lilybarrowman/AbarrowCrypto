@@ -50,30 +50,34 @@ public abstract class StreamRunnable implements Runnable {
     return failure;
   }
 
-  public final InputStream start(InputStream in) throws IOException {
+  public final InputStream startAsync(InputStream in) throws IOException {
     src = in;
     closeOnEnd = true;
     DynamicByteQueue q = new DynamicByteQueue();
     dest = q.getOutputStream();
     related = q.getInputStream();
-    Thread thread = new Thread(this);
-    thread.start();
+    startOnNewThread();
     return related;
   }
-  
-  public final ByteProcess start() {
-    return new ByteProcess(this);
+
+  private void startOnNewThread() {
+    Thread thread = new Thread(this); //this should be replaced to use thread pools of some sort
+    thread.start();
   }
   
-  public final byte[] start(byte[] input) throws IOException {
-    return start().add(input).finish();
+  public final ByteProcess asByteProcess(boolean async) {
+    return new ByteProcess(async, this);
+  }
+  
+  public final byte[] startSync(byte[] input) throws IOException {
+    return asByteProcess(false).add(input).finishSync();
   }
 
-  public final OutputStream start(InputStream in, OutputStream out) throws IOException {
-    return start(in, out, true);
+  public final OutputStream startSync(InputStream in, OutputStream out) throws IOException {
+    return startSync(in, out, true);
   }
   
-  public final OutputStream start(InputStream in, OutputStream out, boolean closeWhenDone) throws IOException {
+  public final OutputStream startSync(InputStream in, OutputStream out, boolean closeWhenDone) throws IOException {
     src = in;
     dest = out;
     closeOnEnd = closeWhenDone;
@@ -82,6 +86,13 @@ public abstract class StreamRunnable implements Runnable {
       throw getFailureReason();
     }
     return out;
+  }
+  
+  public final void startAsync(InputStream in, OutputStream out, boolean closeWhenDone) {
+    src = in;
+    dest = out;
+    closeOnEnd = closeWhenDone;
+    startOnNewThread();
   }
 
 }

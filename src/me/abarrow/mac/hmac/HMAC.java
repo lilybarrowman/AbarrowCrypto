@@ -65,7 +65,7 @@ public class HMAC implements MAC {
       queue = new DynamicByteQueue();
     }
     
-    ByteProcess hashProc = hasher.hash().start();
+    ByteProcess hashProc = hasher.hash().asByteProcess(true);
     
     
     hashProc.add(iPadKey);
@@ -167,10 +167,10 @@ public class HMAC implements MAC {
     CryptoUtils.fillWithZeroes(buffer);
     CryptoUtils.fillWithZeroes(old);
 
-    byte[] firstPass = hashProc.finish();
-    hashProc = hasher.hash().start().add(oPadKey).add(firstPass);
+    byte[] firstPass = hashProc.finishSync();
+    hashProc = hasher.hash().asByteProcess(false).add(oPadKey).add(firstPass);
     CryptoUtils.fillWithZeroes(firstPass);
-    byte[] hash = hashProc.finish();
+    byte[] hash = hashProc.finishSync();
     if (!isTagging) {
       if(!CryptoUtils.arrayEquals(hash, messageMac)) {
         throw new IOException(new CryptoException(CryptoException.MAC_DOES_NOT_MATCH));
@@ -196,15 +196,15 @@ public class HMAC implements MAC {
       throw new CryptoException(CryptoException.NO_KEY);
     }
     try {
-      byte[] firstPass = hasher.hash().start().add(iPadKey).add(data, start, length).finish();
-      ByteProcess hashProc = hasher.hash().start().add(oPadKey).add(firstPass);
+      byte[] firstPass = hasher.hash().asByteProcess(false).add(iPadKey).add(data, start, length).finishSync();
+      ByteProcess hashProc = hasher.hash().asByteProcess(false).add(oPadKey).add(firstPass);
       CryptoUtils.fillWithZeroes(firstPass);
       if (tagOnly) {
-        return hashProc.finish();
+        return hashProc.finishSync();
       } else {
         byte[] out = new byte[length + hashByteLength];
         System.arraycopy(data, start, out, 0, length);
-        return hashProc.finish(out, length);
+        return hashProc.finishSync(out, length);
       }
     } catch(IOException e) {
       throw new CryptoException(e);
@@ -249,7 +249,7 @@ public class HMAC implements MAC {
 
     if (key.length > blockBytes) {
       try {
-        key = hasher.hash().start(key);
+        key = hasher.hash().startSync(key);
       } catch (IOException e) {
         throw new CryptoException(e);
       }

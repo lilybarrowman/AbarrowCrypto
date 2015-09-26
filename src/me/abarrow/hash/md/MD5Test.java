@@ -11,7 +11,7 @@ import org.junit.Test;
 public class MD5Test {
   
   private String MD5Case(String testString) throws IOException {
-    return CryptoUtils.byteArrayToHexString(new MD5().hash().start(testString.getBytes()));
+    return CryptoUtils.byteArrayToHexString(new MD5().hash().startSync(testString.getBytes()));
   }
   
   @Test

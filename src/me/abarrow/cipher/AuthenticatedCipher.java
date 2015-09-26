@@ -34,7 +34,7 @@ public class AuthenticatedCipher implements Cipher {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         StreamRunnable encrypt = cipher.encrypt();
-        mac.tag(false).start(encrypt.start(in), out);
+        mac.tag(false).startSync(encrypt.startAsync(in), out);
         encrypt.throwIfFailed();
       }
     };
@@ -46,7 +46,7 @@ public class AuthenticatedCipher implements Cipher {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         StreamRunnable checkTag = mac.checkTag(false);
-        cipher.decrypt().start(checkTag.start(in), out);
+        cipher.decrypt().startSync(checkTag.startAsync(in), out);
         checkTag.throwIfFailed();
       }
     };
