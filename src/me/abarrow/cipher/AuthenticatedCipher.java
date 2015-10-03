@@ -19,16 +19,6 @@ public class AuthenticatedCipher implements Cipher {
   }
 
   @Override
-  public byte[] encrypt(byte[] input) throws CryptoException {
-    return mac.tag(cipher.encrypt(input), false);
-  }
-
-  @Override
-  public byte[] decrypt(byte[] input) throws CryptoException {
-    return cipher.decrypt(mac.checkTag(input, false));
-  }
-
-  @Override
   public StreamRunnable encrypt() {
     return new StreamRunnable() {
       @Override

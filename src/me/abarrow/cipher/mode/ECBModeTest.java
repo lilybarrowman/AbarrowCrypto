@@ -34,12 +34,12 @@ public class ECBModeTest {
     ByteArrayOutputStream o = new ByteArrayOutputStream();
     ecbMode.encrypt().startSync(new ByteArrayInputStream(plainText), o);
     assertArrayEquals(expectedCipherText,  o.toByteArray());
-    assertArrayEquals(expectedCipherText, ecbMode.encrypt(plainText));
+    assertArrayEquals(expectedCipherText, ecbMode.encrypt().startSync(plainText));
 
     o = new ByteArrayOutputStream();
     ecbMode.decrypt().startSync(new ByteArrayInputStream(expectedCipherText), o);
     assertArrayEquals(plainText, o.toByteArray());
-    assertArrayEquals(plainText, ecbMode.decrypt(expectedCipherText));
+    assertArrayEquals(plainText, ecbMode.decrypt().startSync(expectedCipherText));
   }
 
 }

@@ -40,65 +40,7 @@ public class CTRMode implements Cipher {
     counter = c;
     prpendingIV = true;
   }
-
-  @Override
-  public byte[] encrypt(byte[] input) throws CryptoException {
-    return encryptOrDecrypt(input, true);
-  }
-
-  private byte[] encryptOrDecrypt(byte[] input, boolean encrypting) throws CryptoException {
-    if (!hasIV()) {
-      throw new CryptoException(CryptoException.NO_IV);
-    }
-    counter.reset();
-    int inputLen = input.length;
-    byte[] output;
-    int outputOffset;
-    int inputOffset;
-    if (prpendingIV) {
-      if (encrypting) {
-        inputOffset = 0;
-        outputOffset = blockSize;
-        output = new byte[inputLen + blockSize];
-        System.arraycopy(iv, 0, output, 0, blockSize);
-      } else {
-        outputOffset = 0;
-        inputLen -= blockSize;
-        inputOffset = blockSize;
-        output = new byte[inputLen];
-        setIV(input);
-      }
-    } else {
-      outputOffset = 0;
-      output = new byte[inputLen];
-      inputOffset = 0;
-    }
-    byte[] counterVal = new byte[blockSize];
-    byte[] block = new byte[blockSize];
-    int n;
-    int end = inputLen / blockSize * blockSize;
-    for (n = 0; n < end; n+= blockSize) {
-      //easy enough to make parallel later
-      CryptoUtils.fillLastBytes(counter.increment(), counterVal, blockSize);
-      CryptoUtils.xorByteArrays(counterVal, iv, block);
-      core.encryptBlock(block, 0, output, outputOffset + n);
-    }
-    if (n != inputLen) {
-      CryptoUtils.fillLastBytes(counter.increment(), counterVal, blockSize);
-      CryptoUtils.xorByteArrays(counterVal, iv, block);
-      core.encryptBlock(block, block);
-      System.arraycopy(block, 0, output, outputOffset + n, inputLen - n);
-    }   
-    CryptoUtils.fillWithZeroes(block);
-    CryptoUtils.fillWithZeroes(counterVal);
-    return CryptoUtils.xorByteArrays(input, inputOffset, output, outputOffset, output, outputOffset, inputLen);
-  }
-
-  @Override
-  public byte[] decrypt(byte[] input) throws CryptoException {
-    return encryptOrDecrypt(input, false);
-  }
-
+  
   @Override
   public StreamRunnable encrypt() {
     return new StreamRunnable(){

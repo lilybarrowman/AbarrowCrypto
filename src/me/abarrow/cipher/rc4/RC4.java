@@ -64,43 +64,6 @@ public class RC4 implements Cipher {
     return bytes;
   }
 
-  @Override
-  public byte[] encrypt(byte[] input) throws CryptoException {
-    return encryptCore(input, true);
-  }
-
-  private byte[] encryptCore(byte[] input, boolean encrypting) throws CryptoException {
-    byte[] output = null;
-    int outputOffset = 0;
-    if (prependingIV) {
-      if (encrypting) {
-        if (iv == null) {
-          throw new CryptoException(CryptoException.NO_IV);
-        }
-        output = new byte[input.length + IV_LENGTH];
-        System.arraycopy(iv, 0, output, 0, IV_LENGTH);
-        outputOffset = IV_LENGTH;
-      } else {
-        //TODO
-      }
-    } else {
-      output = new byte[input.length];
-    }
-    
-    
-    createAbsoluteKeyAsNeeded();
-    CryptoUtils.fillWithZeroes(nextBytes(new byte[drop]));
-    nextBytes(output, outputOffset, output.length - outputOffset);
-    CryptoUtils.xorByteArrays(input, 0, output, outputOffset, output, outputOffset, input.length);
-    removeAbsoluteKey();
-    return output;
-  }
-
-  @Override
-  public byte[] decrypt(byte[] input) throws CryptoException {
-    return encryptCore(input, false);
-  }
-
   private void createAbsoluteKeyAsNeeded() throws CryptoException {
     if (keyMac == null) {
       if (!hasKey()) {

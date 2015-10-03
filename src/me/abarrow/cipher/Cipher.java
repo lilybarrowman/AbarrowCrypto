@@ -5,9 +5,6 @@ import me.abarrow.stream.StreamRunnable;
 
 public interface Cipher {
   
-  public byte[] encrypt(byte[] input) throws CryptoException;
-  public byte[] decrypt(byte[] input) throws CryptoException;
-  
   public StreamRunnable encrypt();
   public StreamRunnable decrypt();
   

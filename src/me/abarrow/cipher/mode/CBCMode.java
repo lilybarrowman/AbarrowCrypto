@@ -33,66 +33,6 @@ public class CBCMode implements Cipher {
   }
   
   @Override
-  public byte[] encrypt(byte[] unpadded) throws CryptoException {
-    if (!hasIV()) {
-      throw new CryptoException(CryptoException.NO_IV);
-    }
-    byte[] input = padding.pad(unpadded);
-    byte[] output = null;
-    int outputOffset = 0;
-    if (prpendingIV) {
-      output = new byte[input.length + blockSize];
-      System.arraycopy(iv, 0, output, 0, blockSize);
-      outputOffset = blockSize;
-    } else {
-      output = new byte[input.length];
-    }
-    int i;
-    byte[] xored = new byte[blockSize];
-    System.arraycopy(iv, 0, xored, 0, blockSize);
-    for (i = 0; (i + blockSize - 1) < input.length; i += blockSize) {
-      CryptoUtils.xorByteArrays(input, i, xored, 0, xored, 0, blockSize);
-      core.encryptBlock(xored, xored);
-      System.arraycopy(xored, 0, output, i + outputOffset, blockSize);
-    }
-
-    CryptoUtils.fillWithZeroes(xored);
-    return output;
-  }
-
-  @Override
-  public byte[] decrypt(byte[] input) throws CryptoException {
-    if (!hasIV()) {
-      throw new CryptoException(CryptoException.NO_IV);
-    }
-    int inpLength = input.length;
-    int inpOffset = 0;
-    if (prpendingIV) {
-      setIV(input);
-      inpLength = input.length - blockSize;
-      inpOffset = blockSize;
-    }
-    byte[] output = new byte[inpLength];
-    byte[] swap;
-    int i;
-    byte[] xored = new byte[blockSize];
-    byte[] chain = new byte[blockSize];
-    System.arraycopy(iv, 0, chain, 0, blockSize);
-    for (i = 0; (i + blockSize - 1) < inpLength; i += blockSize) {
-      System.arraycopy(input, i + inpOffset, xored, 0, blockSize);
-      core.decryptBlock(xored, 0, output, i);
-      CryptoUtils.xorByteArrays(output, i, chain, 0, output, i, blockSize);
-      swap = chain;
-      chain = xored;
-      xored = swap;
-    }
-
-    CryptoUtils.fillWithZeroes(xored);
-    CryptoUtils.fillWithZeroes(chain);
-    return padding.unpad(output);
-  }
-
-  @Override
   public StreamRunnable encrypt() {
     return new StreamRunnable() {
       @Override
