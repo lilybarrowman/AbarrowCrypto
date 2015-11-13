@@ -1,12 +1,11 @@
 package me.abarrow.stream;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import me.abarrow.core.CryptoUtils;
 
@@ -15,15 +14,18 @@ public class DynamicByteQueue {
   private final int chunkSize;
 
   private ConcurrentLinkedQueue<byte[]> byteQueue;
-  private volatile int lastChunkIndex;
-  private int firstChunkIndex;
-  private byte[] front;
-
-  private AtomicBoolean doneAdding;
-  private boolean doneRemoving;
-  private AtomicLong chunkCount;
-  private Object readLock;
+  private AtomicInteger chunkCount;
+  private Semaphore chunkSemaphore;
+  
   private Object writeLock;
+  private byte[] front;
+  private volatile boolean isDoneWriting; //volatile because it is modified by the writing thread and read by the reading thread
+  private volatile int lastChunkIndex; //volatile because it is modified by the writing thread and read by the reading thread
+  
+  private Object readLock;
+  private int firstChunkIndex; //only ever modified and read by the reader no need to be volatile
+  private boolean isDoneReading; //only ever modified and read by the reader no need to be volatile
+  
 
   private OutputStream out = new OutputStream() {
 
@@ -97,13 +99,14 @@ public class DynamicByteQueue {
     byteQueue = new ConcurrentLinkedQueue<byte[]>();
     lastChunkIndex = 0;
     firstChunkIndex = 0;
-    doneAdding = new AtomicBoolean(false);
+    isDoneWriting = false;
     readLock = new Object();
     writeLock = new Object();
-    chunkCount = new AtomicLong(0);
+    chunkCount = new AtomicInteger(0);
     chunkSize = sizeOfChunks;
     front = new byte[chunkSize];
-    doneRemoving = false;
+    isDoneReading = false;
+    chunkSemaphore = new Semaphore(0);
   }
 
   public void write(byte[] bytes) {
@@ -112,7 +115,7 @@ public class DynamicByteQueue {
 
   public void write(byte[] bytes, int start, int length) {
     synchronized (writeLock) {
-      if (doneAdding.get()) {
+      if (isDoneWriting) {
         return;
       }
       int srcPos = start;
@@ -129,6 +132,7 @@ public class DynamicByteQueue {
           byteQueue.add(front);
           front = new byte[chunkSize];
           chunkCount.incrementAndGet();
+          chunkSemaphore.release();
         }
       }
     }
@@ -136,24 +140,25 @@ public class DynamicByteQueue {
 
   public void doneWriting() {
     synchronized (writeLock) {
-      if (!doneAdding.get()) {
+      if (!isDoneWriting) {
         chunkCount.incrementAndGet();
         byteQueue.add(front);
-        doneAdding.set(true);
+        isDoneWriting = true;
+        chunkSemaphore.release();
       }
     }
   }
   
   public void doneReading() {
     synchronized (readLock) {
-      if (doneRemoving) {
+      if (isDoneReading) {
         return;
       }
-      if (!doneAdding.get()) {
-        doneWriting(); //this is and should be scary
+      if (!isDoneWriting) {
+        doneWriting();
       }
       skip(available());
-      doneRemoving = true;
+      isDoneReading = true;
     }
   }
   
@@ -189,12 +194,11 @@ public class DynamicByteQueue {
 
   public int available() {
     synchronized (readLock) {
-      if (doneRemoving) {
+      if (isDoneReading) {
         return 0;
       }
-      boolean noLongerWriting = doneAdding.get();
-      int chunks = chunkCount.intValue();
-      if (noLongerWriting) {
+      int chunks = chunkCount.get();
+      if (isDoneWriting) {
         if (chunks < 2) {
           return lastChunkIndex - firstChunkIndex;
         } else {
@@ -213,36 +217,40 @@ public class DynamicByteQueue {
 
   private int innerReadOrSkip(byte[] bytes, int start, int length, boolean skip) {
     synchronized (readLock) {
-      if (doneRemoving) {
+      if (isDoneReading) {
         return -1;
       }
       int dataRead = 0;
       int destPos = start;
       int remaining = length;
       while (dataRead < length) {
-        if (chunkCount.longValue() >= 2) {
-          int bytesRead = coreReadOrSkip(bytes, remaining, destPos, chunkSize - firstChunkIndex, byteQueue.peek(), skip);
-          remaining -= bytesRead;
-          dataRead += bytesRead;
-          destPos += bytesRead;
-          if (firstChunkIndex == chunkSize) {
-            firstChunkIndex = 0;
-            byteQueue.poll();
-            chunkCount.decrementAndGet();
+        try {
+          chunkSemaphore.acquire();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        
+        int lastIndex = chunkSize;
+        boolean isOnLastChunk = isDoneWriting && chunkCount.get() == 1;
+        if (isOnLastChunk) {
+          lastIndex = lastChunkIndex;
+        }
+        
+        int bytesRead = coreReadOrSkip(bytes, remaining, destPos, lastIndex - firstChunkIndex, byteQueue.peek(), skip);
+        remaining -= bytesRead;
+        dataRead += bytesRead;
+        destPos += bytesRead;
+        if (firstChunkIndex == lastIndex) {
+          firstChunkIndex = 0;
+          byteQueue.poll();
+          chunkCount.decrementAndGet();
+          if (isOnLastChunk) {
+            isDoneReading = true;
+            break;
           }
-        } else if (doneAdding.get()) {
-          if (firstChunkIndex == lastChunkIndex) {
-            doneRemoving = true;
-            return dataRead == 0 ? -1 : dataRead;
-          }
-          return dataRead
-              + coreReadOrSkip(bytes, remaining, destPos, lastChunkIndex - firstChunkIndex, byteQueue.peek(), skip);
         } else {
-          try {
-            Thread.sleep(0); // wait for more data to be written this can cause deadlock
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
+          //we haven't finished consuming this chunk
+          chunkSemaphore.release();
         }
       }
       return dataRead;
@@ -260,7 +268,7 @@ public class DynamicByteQueue {
   }
   
   public boolean isDoneWriting() {
-    return doneAdding.get();
+    return isDoneWriting;
   }
 
 }
