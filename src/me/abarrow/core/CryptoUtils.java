@@ -75,6 +75,11 @@ public class CryptoUtils {
       data[n] = 0;
     }
   }
+  
+  public static int reverseByteBitOrder(int x) {
+	  // http://graphics.stanford.edu/%7Eseander/bithacks.html#ReverseByteWith64BitsDiv
+	  return (int)((x * 0x0202020202L & 0x010884422010L) % 1023L);
+  }
 
   public static int swapEndianness(int x) {
     return CryptoUtils.intFromBytes(CryptoUtils.intToBytes(x, new byte[4], 0, false), 0, true);
@@ -276,6 +281,26 @@ public class CryptoUtils {
           + ((bytes[start + 3] & 0xffL) << 32) + ((bytes[start + 4] & 0xffL) << 24)
           + ((bytes[start + 5] & 0xffL) << 16) + ((bytes[start + 6] & 0xffL) << 8) + (bytes[start + 7] & 0xffL);
     }
+  }
+  
+  public static int safeLittleBitEndianIntFromBytes(byte[] bytes, int start) {
+    int output = 0;    
+    int idx = start;
+    for (int i = 0; (i < 4) && (idx < bytes.length); i++) {
+      output |= reverseByteBitOrder(bytes[idx] & 0xff) << (8 * i);
+      idx++;
+    }
+    return output;
+  }
+  
+  public static int safeBigEndianIntFromBytes(byte[] bytes, int endIndex) {
+    int output = 0;    
+    int idx = endIndex;
+    for (int i = 0; (i < 4) && (idx >= 0); i++) {
+      output |= (bytes[idx] & 0xff) << (8 * i);
+      idx--;
+    }
+    return output;
   }
 
   public static long safeLongFromBytes(byte[] bytes, int start) {
@@ -633,7 +658,7 @@ public class CryptoUtils {
 
   public static int multiplyFiniteFieldBytes(int a, int b, int fundPoly) {
     int p = 0;
-    for (int n = 0; (n < 8) && ((b != 0) || (a != 0)); n++) {
+    for (int n = 0; n < 8; n++) {
       if ((b & 0x01) == 1) {
         p ^= a;
       }
