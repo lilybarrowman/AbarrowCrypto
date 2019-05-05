@@ -2,7 +2,7 @@ package me.abarrow.stream;
 
 import java.io.ByteArrayOutputStream;
 
-class CopyFreeByteArrayOutputStream extends ByteArrayOutputStream {
+public class DirectByteOutputStream extends ByteArrayOutputStream {
   public byte[] getBuffer() {
     return buf;
   }

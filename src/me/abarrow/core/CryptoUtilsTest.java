@@ -143,4 +143,12 @@ public class CryptoUtilsTest {
     assertEquals(true, CryptoUtils.constantTimeArrayEquals(a, c));
   }
 
+  @Test
+  public void reverseIntBitOrder() {
+    int before =    0b11110000101001011110011100011001;
+    int expected =  0b10011000111001111010010100001111;
+    int after =  CryptoUtils.reverseIntBitOrder(before);
+    assertEquals(expected, after);
+  }
+  
 }

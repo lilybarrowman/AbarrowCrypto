@@ -26,7 +26,21 @@ public class Int128 extends Number {
   public Int128(int[] w) {
     words = Arrays.copyOf(w, WORD_COUNT);
   }
-	  
+	
+  public void setWords(int lowest, int low, int high, int highest) {
+    words[0] = lowest;
+    words[1] = low;
+    words[2] = high;
+    words[3] = highest;
+  }
+  
+  public void setWord(int idx, int value) {
+    words[idx] = value;
+  }
+  
+  public int getWord(int idx) {
+    return words[idx];
+  }
   
   public static void times(final Int128 left, final Int128 right, Int128 dest) {
     assert(left != dest);
@@ -205,6 +219,14 @@ public class Int128 extends Number {
   
   public byte[] toLittleBitEndianBytes() {
     return CryptoUtils.littleBitEndianToLittleEndian(toLittleEndianBytes());
+  }
+  
+  public byte[] toLittleEndianBytes(byte[] dest) {
+    return CryptoUtils.intArrayToByteArray(dest, 0, words, true);
+  }
+  
+  public byte[] toLittleBitEndianBytes(byte[] dest) {
+    return CryptoUtils.littleBitEndianToLittleEndian(toLittleEndianBytes(dest));
   }
   
   public void toZero() {

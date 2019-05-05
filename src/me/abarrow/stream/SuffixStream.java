@@ -18,7 +18,7 @@ public class SuffixStream extends InputStream {
   public SuffixStream(InputStream in, int suffixLength) throws IOException {
     suffixDesiredLength = suffixLength;
     
-    CopyFreeByteArrayOutputStream out = new CopyFreeByteArrayOutputStream();
+    DirectByteOutputStream out = new DirectByteOutputStream();
     byte[] chunk = new byte[1024];
     while (true) {
       int read = in.read(chunk);

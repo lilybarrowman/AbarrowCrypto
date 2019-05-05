@@ -34,7 +34,7 @@ public abstract class StreamProcess {
   }
   
   public final byte[] runSync(byte[] input) throws IOException {
-    CopyFreeByteArrayOutputStream out = new CopyFreeByteArrayOutputStream();
+    DirectByteOutputStream out = new DirectByteOutputStream();
     process(new ByteArrayInputStream(input), out);
     out.close();
     byte[] output = out.toByteArray();

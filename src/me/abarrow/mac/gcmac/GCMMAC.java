@@ -1,59 +1,60 @@
 package me.abarrow.mac.gcmac;
 
+import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
+import me.abarrow.mac.MAC;
+import me.abarrow.stream.StreamProcess;
 
-public class GCMMAC {
+public class GCMMAC implements MAC {
   
-  public static final int BLOCK_SIZE = 16;
-  private static final byte[] TRUNC_POLY = new byte[BLOCK_SIZE];
-  static {
-    GCMMAC.TRUNC_POLY[0] = (byte) 0xe1;
-  }
-  
-  private byte[] key;
-  private byte[] spare;
-  
-  public GCMMAC(byte[] hashKey) {
-    key = hashKey;
-    spare = new byte[GCMMAC.BLOCK_SIZE];
+  public GCMMAC() {
   }
 
-  public byte[] plainAuthHash(byte[] plainAuth) {
-    byte[] hash = new byte[GCMMAC.BLOCK_SIZE];
-    return hashData(hash, plainAuth);
+  @Override
+  public StreamProcess tag(boolean tagOnly) {
+    // TODO Auto-generated method stub
+    return null;
   }
-  
-  public byte[] hashData(byte[] hash, byte[] data) {
-    int m = (data.length + GCMMAC.BLOCK_SIZE - 1) / GCMMAC.BLOCK_SIZE; 
-    int i;
-    for (i = 1; i < m; i++) {
-      hash = hashBlock(hash, data, (i - 1) * GCMMAC.BLOCK_SIZE);
-    }
-    return hashLastBlock(hash, data, (i - 1) * GCMMAC.BLOCK_SIZE);
+
+  @Override
+  public byte[] tag(byte[] data, boolean tagOnly) throws CryptoException {
+    // TODO Auto-generated method stub
+    return null;
   }
-  
-  public byte[] hashLastBlock(byte[] hash, byte[] data, int dataStart) {
-    CryptoUtils.fillWithZeroes(spare);
-    System.arraycopy(data, dataStart, spare, 0, data.length - dataStart);
-    CryptoUtils.xorByteArrays(hash, 0, spare, 0, spare, 0, GCMMAC.BLOCK_SIZE);
-    CryptoUtils.multiplyFiniteFieldsModifyingInputs(spare, key, hash, GCMMAC.TRUNC_POLY);
-    return hash;
+
+  @Override
+  public StreamProcess checkTag(boolean checkOnly) {
+    // TODO Auto-generated method stub
+    return null;
   }
-  
-  public byte[] hashBlock(byte[] hash, byte[] data, int dataStart) {
-    CryptoUtils.xorByteArrays(hash, 0, data, dataStart, spare, 0, GCMMAC.BLOCK_SIZE);
-    CryptoUtils.multiplyFiniteFieldsModifyingInputs(spare, key, hash, GCMMAC.TRUNC_POLY);
-    return hash;
+
+  @Override
+  public byte[] checkTag(byte[] data, boolean checkOnly) throws CryptoException {
+    // TODO Auto-generated method stub
+    return null;
   }
-  
-  public byte[] finalHash(byte[] hash, int plainBytes, int cipherBytes) {
-    long plainLength = 8L * plainBytes;
-    long cipherLength = 8L * cipherBytes;
-    CryptoUtils.longToBytes(plainLength, spare, 0, false);
-    CryptoUtils.longToBytes(cipherLength, spare, 0, false);
-    CryptoUtils.xorByteArrays(hash, 0, spare, 0, spare, 0, GCMMAC.BLOCK_SIZE);
-    CryptoUtils.multiplyFiniteFieldsModifyingInputs(spare, key, hash, GCMMAC.TRUNC_POLY);
-    return hash;
+
+  @Override
+  public MAC setKey(byte[] key) throws CryptoException {
+    // TODO Auto-generated method stub
+    return null;
   }
-  
+
+  @Override
+  public boolean hasKey() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public MAC removeKey() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public int getTagLength() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 }

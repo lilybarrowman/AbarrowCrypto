@@ -11,6 +11,8 @@ public class CryptoException extends Exception {
   
   public static final String NO_IV = "No IV has been provided.";
   
+  public static final String CANNOT_PREPEND__IV = "Cannot prepend IV that of non standard size.";
+  
   public static final String MAC_DOES_NOT_MATCH = "The provided MAC does not match the provided message.";
   
   public static final String NO_MAC = "No MAC was provided.";

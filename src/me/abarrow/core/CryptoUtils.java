@@ -53,8 +53,10 @@ public class CryptoUtils {
       0xff };
 
   public static void fillWithZeroes(byte[] data) {
-    for (int n = 0; n < data.length; n++) {
-      data[n] = CryptoUtils.ZERO_BYTE;
+    if (data != null) {
+      for (int n = 0; n < data.length; n++) {
+        data[n] = CryptoUtils.ZERO_BYTE;
+      }
     }
   }
 
@@ -79,6 +81,15 @@ public class CryptoUtils {
   public static byte reverseByteBitOrder(byte x) {
 	  // http://graphics.stanford.edu/%7Eseander/bithacks.html#ReverseByteWith64BitsDiv
 	  return (byte)(((x  & 0xff) * 0x0202020202L & 0x010884422010L) % 1023L);
+  }
+  
+  public static int reverseIntBitOrder(int a) {
+    byte lowest = reverseByteBitOrder((byte)(a & 0xff));
+    byte low = reverseByteBitOrder((byte)((a >>> 8) & 0xff));
+    byte high = reverseByteBitOrder((byte)((a >>> 16) & 0xff));
+    byte highest = reverseByteBitOrder((byte)((a >>> 24) & 0xff));
+    
+    return (highest & 0xff) | ((high & 0xff) << 8) | ((low & 0xff) << 16) | ((lowest & 0xff) << 24);
   }
 
   public static int swapEndianness(int x) {
@@ -784,6 +795,13 @@ public class CryptoUtils {
       aIndex++;
     }
     return (orred == 0);
+  }
+  
+  public static byte[] concatArrays(byte[] a, byte[] b) {
+    byte[] c = new byte[a.length + b.length];
+    System.arraycopy(a, 0, c, 0, a.length);
+    System.arraycopy(b, 0, c, a.length, b.length);
+    return c;
   }
 
 }
