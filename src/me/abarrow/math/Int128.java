@@ -28,7 +28,7 @@ public class Int128 extends Number {
   }
 	  
   
-  static void times(final Int128 left, final Int128 right, Int128 dest) {
+  public static void times(final Int128 left, final Int128 right, Int128 dest) {
     assert(left != dest);
     assert(right != dest);
     
@@ -44,7 +44,7 @@ public class Int128 extends Number {
     }
   }
   
-  static void plus(final Int128 left, final Int128 right, Int128 dest) {
+  public static void plus(final Int128 left, final Int128 right, Int128 dest) {
     assert(left != dest);
     assert(right != dest);
     
@@ -56,7 +56,7 @@ public class Int128 extends Number {
     }
   }
   
-  static void xor(final Int128 left, final Int128 right, Int128 dest) {
+  public static void xor(final Int128 left, final Int128 right, Int128 dest) {
     assert(left != dest);
     assert(right != dest);
     
@@ -65,7 +65,7 @@ public class Int128 extends Number {
     }
   }
   
-  void xorEquals(final Int128 other) {
+  public void xorEquals(final Int128 other) {
     for (int i = 0; i < WORD_COUNT; i++) {
       words[i] ^= other.words[i];
     }
@@ -88,7 +88,7 @@ public class Int128 extends Number {
   }
   
   
-  static void finite_times(final Int128 left, final Int128 right, Int128 dest, Int128 spare) {
+  public static void finiteTimes(final Int128 left, final Int128 right, Int128 dest, Int128 spare) {
     assert(left != dest);
     assert(right != dest);
     
@@ -107,43 +107,107 @@ public class Int128 extends Number {
       }
   }
   
-  static Int128 parseLittleBitEndianHex(String s) {
+  public void finiteTimesEquals(final Int128 other, Int128 spare) {
+    assert(other != spare);
+    spare.set(this);
+    toZero();
+    
+      for (int n = 0; n < BIT_COUNT; n++) {
+        if (other.getBit(n) == 1) {
+          xorEquals(spare);
+        }
+        
+        if (spare.shiftLeftOne() == 1) {
+          // This is specific to the use in GCM/GHASH
+          spare.words[0] ^= 0x87;
+        }
+      }
+  }
+  
+  public Int128 copyFromLittleEndian(byte[] bytes) {
+    return copyFromLittleEndian(bytes, 0);
+  }
+  
+  public Int128 copyFromLittleEndian(byte[] bytes, int start) {
+    words[0] = CryptoUtils.safeLittleEndianIntFromBytes(bytes, start);
+    words[1] = CryptoUtils.safeLittleEndianIntFromBytes(bytes, start + 4);
+    words[2] = CryptoUtils.safeLittleEndianIntFromBytes(bytes, start + 8);
+    words[3] = CryptoUtils.safeLittleEndianIntFromBytes(bytes, start + 12);
+    return this;
+  }
+  
+  public static Int128 fromLittleEndian(byte[] bytes, int start) {
+    return new Int128().copyFromLittleEndian(bytes, start);
+  }
+  
+  public static Int128 fromLittleEndian(byte[] bytes) {
+    return fromLittleEndian(bytes, 0);
+  }
+  
+  public Int128 copyFromLittleBitEndian(byte[] bytes, int start) {
+    words[0] = CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, start);
+    words[1] = CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, start + 4);
+    words[2] = CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, start + 8);
+    words[3] = CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, start + 12);
+    return this;
+  }
+
+  public Int128 copyFromLittleBitEndian(byte[] bytes) {
+    return copyFromLittleBitEndian(bytes, 0);
+  }
+  
+  public static Int128 fromLittleBitEndian(byte[] bytes, int start) {
+    return new Int128().copyFromLittleBitEndian(bytes, start);
+  }
+  
+  public static Int128 fromLittleBitEndian(byte[] bytes) {
+    return fromLittleBitEndian(bytes, 0);
+  }
+  
+  public static Int128 parseLittleBitEndianHex(String s) {
     byte[] bytes = DatatypeConverter.parseHexBinary(s);
-    
-    
-    Int128 parsed = new Int128(
-      CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, 0),
-      CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, 4),
-      CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, 8),
-      CryptoUtils.safeLittleBitEndianIntFromBytes(bytes, 12)
-    );
+    Int128 parsed = fromLittleBitEndian(bytes);
     CryptoUtils.fillWithZeroes(bytes);
     return parsed;
   }
   
-  static Int128 parseBigEndianHex(String s) {
+  public static Int128 parseBigEndianHex(String s) {
     byte[] bytes = DatatypeConverter.parseHexBinary(s);
-    
-    
     Int128 parsed = new Int128(
       CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 1),
       CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 5),
       CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 9),
-      CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 13)
-    );
+      CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 13));
     CryptoUtils.fillWithZeroes(bytes);
     return parsed;
   }
   
-  String toHexString() {
-	StringBuilder out = new StringBuilder();
-	for (int w = WORD_COUNT - 1; w >=0 ; w--) {
-		out.append(String.format("%08x", words[w]));
-	}
-	return out.toString();
+  public String toHexString() {
+  	StringBuilder out = new StringBuilder();
+  	for (int w = WORD_COUNT - 1; w >=0 ; w--) {
+  		out.append(String.format("%08x", words[w]));
+  	}
+  	return out.toString();
   }
   
-  void toZero() {
+  public String tolittleBitEndianHexString() {
+    StringBuilder out = new StringBuilder();
+    byte[] littleBitEndians = toLittleBitEndianBytes();
+    for (int n = 0; n < littleBitEndians.length; n++) {
+      out.append(String.format("%02x", littleBitEndians[n] & 0xff));
+    }
+    return out.toString();
+  }
+  
+  public byte[] toLittleEndianBytes() {
+    return CryptoUtils.intArrayToByteArray(words, true);
+  }
+  
+  public byte[] toLittleBitEndianBytes() {
+    return CryptoUtils.littleBitEndianToLittleEndian(toLittleEndianBytes());
+  }
+  
+  public void toZero() {
     for (int i = 0; i < WORD_COUNT; i++) {
       words[i] = 0;
     }
@@ -159,6 +223,16 @@ public class Int128 extends Number {
 	  return Arrays.copyOf(words, WORD_COUNT);
   }
   
+  public boolean constantTimeEquals(Int128 other) {
+    return CryptoUtils.constantTimeArrayEquals(words, other.words);
+  }
+
+  public boolean fastEquals(Int128 other) {
+    return (words[0] == other.words[0]) &&
+        (words[1] == other.words[1]) &&
+        (words[2] == other.words[2]) &&
+        (words[3] == other.words[3]);
+  }
 
   @Override
   public int intValue() {

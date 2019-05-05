@@ -76,9 +76,9 @@ public class CryptoUtils {
     }
   }
   
-  public static int reverseByteBitOrder(int x) {
+  public static byte reverseByteBitOrder(byte x) {
 	  // http://graphics.stanford.edu/%7Eseander/bithacks.html#ReverseByteWith64BitsDiv
-	  return (int)((x * 0x0202020202L & 0x010884422010L) % 1023L);
+	  return (byte)(((x  & 0xff) * 0x0202020202L & 0x010884422010L) % 1023L);
   }
 
   public static int swapEndianness(int x) {
@@ -91,6 +91,21 @@ public class CryptoUtils {
 
   public static int[] swapEndianness(int[] ints) {
     return CryptoUtils.intArrayFromBytes(CryptoUtils.intArrayToByteArray(ints, false), 0, 4 * ints.length, true);
+  }
+  
+  public static byte[] littleBitEndianToLittleEndian(byte[] values) {
+    for (int n = 0; n < values.length; n++) {      
+      values[n] = (byte)(
+          ((values[n] & 0x1) << 7) | 
+          ((values[n] & 0x2) << 5) | 
+          ((values[n] & 0x4) << 3) | 
+          ((values[n] & 0x8) << 1) | 
+          ((values[n] & 0x10) >>> 1) | 
+          ((values[n] & 0x20) >>> 3) | 
+          ((values[n] & 0x40) >>> 5) |
+          ((values[n] & 0x80) >>> 7)); 
+    }
+    return values;
   }
 
   public static int rotateIntLeft(int x, int digits) {
@@ -287,7 +302,17 @@ public class CryptoUtils {
     int output = 0;    
     int idx = start;
     for (int i = 0; (i < 4) && (idx < bytes.length); i++) {
-      output |= reverseByteBitOrder(bytes[idx] & 0xff) << (8 * i);
+      output |= (reverseByteBitOrder(bytes[idx]) & 0xff) << (8 * i);
+      idx++;
+    }
+    return output;
+  }
+  
+  public static int safeLittleEndianIntFromBytes(byte[] bytes, int start) {
+    int output = 0;    
+    int idx = start;
+    for (int i = 0; (i < 4) && (idx < bytes.length); i++) {
+      output |= (bytes[idx] & 0xff) << (8 * i);
       idx++;
     }
     return output;
@@ -723,7 +748,7 @@ public class CryptoUtils {
     return p;
   }
   
-  public static boolean arrayEquals(byte[] a, byte[] b) {
+  public static boolean constantTimeArrayEquals(byte[] a, byte[] b) {
     int len = a.length;
     if (len != b.length) {
       return false;
@@ -735,7 +760,19 @@ public class CryptoUtils {
     return (orred == 0);
   }
   
-  public static boolean subArrayEquals(byte[] a, int aStart, byte[] b, int bStart, int len) {
+  public static boolean constantTimeArrayEquals(int[] a, int[] b) {
+    int len = a.length;
+    if (len != b.length) {
+      return false;
+    }
+    int orred = 0;
+    for (int n = 0; n < len; n++) {
+      orred |= a[n] ^ b[n];
+    }
+    return (orred == 0);
+  }
+  
+  public static boolean constantTimeSubArrayEquals(byte[] a, int aStart, byte[] b, int bStart, int len) {
     int bEnd = len + bStart;
     if ((a.length < (len + aStart)) || (b.length < bEnd)) {
       return false;

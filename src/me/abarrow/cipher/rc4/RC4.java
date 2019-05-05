@@ -70,7 +70,7 @@ public class RC4 implements Cipher {
         throw new CryptoException(CryptoException.NO_KEY);
       }
     } else {
-      if (keyMac.hasMACKey()) {
+      if (keyMac.hasKey()) {
         if (hasIV()) {
           setAbsoluteKey(keyMac.tag(iv, true));
         } else {
@@ -149,7 +149,7 @@ public class RC4 implements Cipher {
       setAbsoluteKey(key);
     } else {
       removeAbsoluteKey();
-      keyMac.setMACKey(key);
+      keyMac.setKey(key);
     }
     return this;
   }
@@ -157,7 +157,7 @@ public class RC4 implements Cipher {
   @Override
   public Cipher removeKey() {
     if (keyMac != null) {
-      keyMac.removeMACKey();
+      keyMac.removeKey();
     }
     removeAbsoluteKey();
     return this;
@@ -176,7 +176,7 @@ public class RC4 implements Cipher {
     if (keyMac == null) {
       return S != null;
     } else {
-      return keyMac.hasMACKey();
+      return keyMac.hasKey();
     }
   }
 

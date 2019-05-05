@@ -1,51 +1,166 @@
 package me.abarrow.cipher.mode;
 
-import me.abarrow.cipher.BlockCipher;
-import me.abarrow.core.CryptoUtils;
-import me.abarrow.mac.gcmac.GCMMAC;
+import me.abarrow.cipher.MACCipher;
 
-public class GCMMode {
-/*  
-  public BlockCipher core;
-  private byte[] hash;
-  private GCMMAC mac;
-  private int plainBytes;
-  private int cipherBytes;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+
+import me.abarrow.cipher.AuthenticatedCipher;
+import me.abarrow.cipher.BlockCipher;
+import me.abarrow.cipher.Cipher;
+import me.abarrow.core.CryptoException;
+import me.abarrow.core.CryptoUtils;
+import me.abarrow.mac.MAC;
+import me.abarrow.mac.gcmac.GCMMAC;
+import me.abarrow.math.Int128;
+import me.abarrow.stream.StreamRunnable;
+
+public class GCMMode implements AuthenticatedCipher {
   
-  public GCMMode(BlockCipher cipher, byte[] plain, byte[] key, byte[] IV) {
-    core = cipher;
-    if (core.getBlockBytes() != GCMMAC.BLOCK_SIZE) {
-      throw new IllegalArgumentException("GCM is only defined for ciphers with a 128 bit block size.");
+  private byte[] iv;
+  private byte[] authData;
+  private BlockCipher bc;
+  private boolean prpendingIV;
+
+  
+  private static final int BLOCK_SIZE = 16;
+
+  public GCMMode(BlockCipher blockCipher) throws CryptoException {
+    bc = blockCipher;
+    if (bc.getBlockBytes() != BLOCK_SIZE) {
+      throw new CryptoException(CryptoException.INCOMPATIBLE_CIPHER);
+    }
+  }
+  
+  public static void ghash(Int128 h, byte[] a, byte[] c, Int128 x) {
+    Int128 extra = new Int128();
+    Int128 spareInt = new Int128();
+    byte[] spare = new byte[BLOCK_SIZE];
+    
+    try {
+      x.toZero();
+      int n;
+      for (n = 0; n < a.length - BLOCK_SIZE; n += BLOCK_SIZE) {
+        extra.copyFromLittleEndian(a, n);
+        x.xorEquals(extra);
+        x.finiteTimesEquals(h, spareInt);
+      }
+      extra.toZero();
+      if (n != a.length) {
+        extra.copyFromLittleEndian(a, n);
+        x.xorEquals(extra);
+        x.finiteTimesEquals(h, spareInt);
+      }
+      
+      for (n = 0; n < c.length - BLOCK_SIZE; n += BLOCK_SIZE) {
+        extra.copyFromLittleEndian(c, n);
+        x.xorEquals(extra);
+        x.finiteTimesEquals(h, spareInt);
+      }
+      extra.toZero();
+      if (n != c.length) {
+        extra.copyFromLittleEndian(c, n);
+        x.xorEquals(extra);
+        x.finiteTimesEquals(h, spareInt);
+      }
+
+      CryptoUtils.longToBytes(((long)a.length)*8, spare, 0, false);
+      CryptoUtils.longToBytes(((long)c.length)*8, spare, 8, false);
+      extra.copyFromLittleBitEndian(spare);
+      x.xorEquals(extra);
+      x.finiteTimesEquals(h, spareInt);
+    } finally {
+      spareInt.toZero();
+      extra.toZero();
+      CryptoUtils.fillWithZeroes(spare);
     }
     
-    mac = new GCMMAC(core.encryptBlock(IV));
-
-    byte[] preIV = new byte[(IV.length + 2 * GCMMAC.BLOCK_SIZE - 1) / GCMMAC.BLOCK_SIZE];
-    System.arraycopy(IV, 0, preIV, 0, IV.length);
-    CryptoUtils.longToBytes(IV.length * 8L, preIV, preIV.length - 8);
-    
-    byte[] j0 = mac.hashData(IV, preIV);
-    
-    
-    hash = mac.plainAuthHash(plain);
-    plainBytes = plain.length;
-    cipherBytes = 0;
   }
 
-  public byte[] codec(byte[] input) {
-    cipherBytes = input.length;
-    int cipherBlocks = (input.length + GCMMAC.BLOCK_SIZE - 1) / GCMMAC.BLOCK_SIZE;
-    byte[] output = new byte[cipherBlocks * GCMMAC.BLOCK_SIZE];
-    
-    
-    
-    return output;
-  }
-  
-  public byte[] getFinalMAC() {
-    hash = mac.finalHash(hash, plainBytes, cipherBytes);
-    //after this function is called this class is dead
-    return hash;
-  }
-*/
+	@Override
+	public StreamRunnable encrypt() {
+		return new StreamRunnable() {
+      @Override
+      public void process(InputStream in, OutputStream out) throws IOException {
+        if (!hasIV()) {
+          throw new IOException(new CryptoException(CryptoException.NO_IV));
+        }
+        byte[] zeroBlock = new byte[BLOCK_SIZE];
+        byte[] hBytes = new byte[BLOCK_SIZE];
+        Int128 hint = new Int128();
+        
+        
+        byte[] y = new byte[BLOCK_SIZE];
+        try {
+          bc.encryptBlock(zeroBlock, hBytes);
+          if (iv.length == 12) {
+            System.arraycopy(iv, 0, y, 0, 12);
+          } else {
+            
+          }
+          
+
+        } catch(CryptoException ce) {
+          throw new IOException(ce);
+        } finally {
+          CryptoUtils.fillWithZeroes(y);
+          CryptoUtils.fillWithZeroes(hBytes);
+          hint.toZero();
+        }
+      }
+		};
+	}
+
+	@Override
+	public StreamRunnable decrypt() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Cipher setKey(byte[] key) throws CryptoException {
+	  bc.setKey(key);
+		return this;
+	}
+
+	@Override
+	public boolean hasKey() {
+		return bc.hasKey();
+	}
+
+	@Override
+	public Cipher removeKey() {
+		bc.removeKey();
+		return this;
+	}
+
+	@Override
+	public Cipher setIV(byte[] initVector) {
+	   iv = Arrays.copyOf(initVector, initVector.length);
+		return this;
+	}
+
+	@Override
+	public byte[] getIV() {
+		return iv;
+	}
+
+	@Override
+	public boolean hasIV() {
+		return iv != null;
+	}
+
+	@Override
+	public boolean isIVPrepending() {
+		return prpendingIV;
+	}
+
+	@Override
+	public Cipher setIVPrepending(boolean ivPrepending) {
+	  prpendingIV = ivPrepending;
+	  return this;
+	}
+	
 }

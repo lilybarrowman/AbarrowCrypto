@@ -8,7 +8,7 @@ import me.abarrow.mac.hmac.HMAC;
 
 public class PBKDF2 {
   public static byte[] generateKey(HMAC hmac, byte[] password, byte[] salt, int interations, int desiredLength) throws CryptoException {
-    hmac.setMACKey(password);
+    hmac.setKey(password);
     byte[] saltedNumber = new byte[4 + salt.length];
     System.arraycopy(salt, 0, saltedNumber, 0, salt.length);
     int hmacLength = hmac.getHMACByteLength();
@@ -30,7 +30,7 @@ public class PBKDF2 {
       System.arraycopy(xoredFragments, 0, key, i * hmacLength, (i == (numChains - 1)) ? desiredLength - hmacLength * i
           : hmacLength);
     }
-    hmac.removeMACKey();
+    hmac.removeKey();
     return key;
   }
 }

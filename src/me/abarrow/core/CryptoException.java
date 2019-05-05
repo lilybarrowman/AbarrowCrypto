@@ -6,7 +6,7 @@ public class CryptoException extends Exception {
       + "therefore cannot it be properly processed.";
   
   public static final String NO_KEY = "No key has been provided.";
-  
+    
   public static final String NO_BLOCK_SIZE = "No block size has been provided.";
   
   public static final String NO_IV = "No IV has been provided.";
@@ -14,6 +14,8 @@ public class CryptoException extends Exception {
   public static final String MAC_DOES_NOT_MATCH = "The provided MAC does not match the provided message.";
   
   public static final String NO_MAC = "No MAC was provided.";
+  
+  public static final String INCOMPATIBLE_CIPHER = "No Cipher provided is not compatible.";
 
   
   public CryptoException(String error) {

@@ -36,7 +36,7 @@ public class HMAC implements MAC {
 
   public HMAC(Hasher hashMaker, byte[] key) throws CryptoException {
     this(hashMaker);
-    setMACKey(key);
+    setKey(key);
   }
 
   public int getHMACByteLength() {
@@ -53,7 +53,7 @@ public class HMAC implements MAC {
   }
   
   private void innerStream(boolean tagOnly, boolean isTagging, InputStream in, OutputStream out) throws IOException {
-    if (!hasMACKey()) {
+    if (!hasKey()) {
       throw new IOException(new CryptoException(CryptoException.NO_KEY));
     }
     
@@ -172,7 +172,7 @@ public class HMAC implements MAC {
     CryptoUtils.fillWithZeroes(firstPass);
     byte[] hash = hashProc.finishSync();
     if (!isTagging) {
-      if(!CryptoUtils.arrayEquals(hash, messageMac)) {
+      if(!CryptoUtils.constantTimeArrayEquals(hash, messageMac)) {
         throw new IOException(new CryptoException(CryptoException.MAC_DOES_NOT_MATCH));
       }
     }
@@ -192,7 +192,7 @@ public class HMAC implements MAC {
   }
 
   private byte[] innerTag(byte[] data, int start, int length, boolean tagOnly) throws CryptoException {
-    if (!hasMACKey()) {
+    if (!hasKey()) {
       throw new CryptoException(CryptoException.NO_KEY);
     }
     try {
@@ -229,7 +229,7 @@ public class HMAC implements MAC {
     
     byte[] computedTag = innerTag(data, 0, unTaggedLen, true);
     
-    if (CryptoUtils.arrayEquals(computedTag, tag)) {
+    if (CryptoUtils.constantTimeArrayEquals(computedTag, tag)) {
       if (checkTagOnly) {
         return new byte[0];
       } else {
@@ -241,9 +241,9 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public MAC setMACKey(byte[] key) throws CryptoException {
-    if (hasMACKey()) {
-      removeMACKey();
+  public MAC setKey(byte[] key) throws CryptoException {
+    if (hasKey()) {
+      removeKey();
     }
     byte[] padded = new byte[blockBytes];
 
@@ -277,12 +277,12 @@ public class HMAC implements MAC {
   }
 
   @Override
-  public boolean hasMACKey() {
+  public boolean hasKey() {
     return iPadKey != null;
   }
 
   @Override
-  public MAC removeMACKey() {
+  public MAC removeKey() {
     CryptoUtils.fillWithZeroes(iPadKey);
     CryptoUtils.fillWithZeroes(oPadKey);
     iPadKey = null;

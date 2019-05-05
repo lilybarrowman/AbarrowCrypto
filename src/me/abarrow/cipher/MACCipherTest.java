@@ -17,7 +17,7 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 import org.junit.Test;
 
-public class AuthenticatedCipherTest {
+public class MACCipherTest {
 
   @Test
   public void test() throws IOException, CryptoException {
@@ -36,7 +36,7 @@ public class AuthenticatedCipherTest {
     assertArrayEquals(expectedEncrypted, encrypted);
     
     MAC mac = new HMAC(new SHA256());
-    mac.setMACKey(macKey);
+    mac.setKey(macKey);
     byte[] tagged =  mac.tag(false).startSync(encrypted);
     assertArrayEquals(expectedTagged, tagged);
     
@@ -47,9 +47,8 @@ public class AuthenticatedCipherTest {
     String decryptedString = new String(decrypted).replace("\0", "");
     assertEquals(plainString, decryptedString);    
     
-    AuthenticatedCipher authCipher = new AuthenticatedCipher(new ECBMode(new AES(), new ZeroPadding()), new HMAC(new SHA256()));
-    authCipher.setKey(cipherKey);
-    authCipher.setMACKey(macKey);
+    MACCipher authCipher = new MACCipher(new ECBMode(new AES(), new ZeroPadding()).setKey(cipherKey),
+        new HMAC(new SHA256()).setKey(macKey));
     byte[] authEncrypted = authCipher.encrypt().startSync(plain);
     assertArrayEquals(expectedTagged, authEncrypted);
 

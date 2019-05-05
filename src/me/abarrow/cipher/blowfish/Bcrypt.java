@@ -112,7 +112,7 @@ public class Bcrypt {
     byte[] salt = bsdBase64.decode(bcryptString.substring(thirdDollar + 1, thirdDollar + 23));
     byte[] hash = bsdBase64.decode(bcryptString.substring(thirdDollar + 23)); 
     byte[] computedHash = computeHash(cost, salt, password);    
-    boolean isEqual = CryptoUtils.subArrayEquals(computedHash, 0, hash, 0, 23);
+    boolean isEqual = CryptoUtils.constantTimeSubArrayEquals(computedHash, 0, hash, 0, 23);
     CryptoUtils.fillWithZeroes(computedHash);
     return isEqual;
   }

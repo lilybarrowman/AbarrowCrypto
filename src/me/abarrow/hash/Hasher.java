@@ -25,7 +25,7 @@ public abstract class Hasher {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         reset();
-        BigInteger totalLength = BigInteger.ZERO;
+        BigInteger totalLength = BigInteger.ZERO; // TODO can I replace with long?
         int blockBytes = getBlockBytes();
         
         byte[] temp = new byte[blockBytes];

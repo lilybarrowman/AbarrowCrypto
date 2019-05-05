@@ -128,9 +128,9 @@ public class CryptoUtilsTest {
 
   @Test
   public void testArrayEquals() {
-    assertEquals(true, CryptoUtils.arrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 10, 12 }));
-    assertEquals(false, CryptoUtils.arrayEquals(new byte[] { 0, 9, 12 }, new byte[] { 0, 10, 12 }));
-    assertEquals(false, CryptoUtils.arrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 12 }));
+    assertEquals(true, CryptoUtils.constantTimeArrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 10, 12 }));
+    assertEquals(false, CryptoUtils.constantTimeArrayEquals(new byte[] { 0, 9, 12 }, new byte[] { 0, 10, 12 }));
+    assertEquals(false, CryptoUtils.constantTimeArrayEquals(new byte[] { 0, 10, 12 }, new byte[] { 0, 12 }));
 
     byte[] a = new byte[] { 9, 7, 6, 56, 73, 45, 67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67, 9, 7, 6, 56, 73, 45,
         67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67 };
@@ -139,8 +139,8 @@ public class CryptoUtilsTest {
     byte[] c = new byte[] { 9, 7, 6, 56, 73, 45, 67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67, 9, 7, 6, 56, 73, 45,
         67, 89, 98, 65, -112, 87, -56, 34, 98, -75, 67 };
 
-    assertEquals(false, CryptoUtils.arrayEquals(a, b));
-    assertEquals(true, CryptoUtils.arrayEquals(a, c));
+    assertEquals(false, CryptoUtils.constantTimeArrayEquals(a, b));
+    assertEquals(true, CryptoUtils.constantTimeArrayEquals(a, c));
   }
 
 }
