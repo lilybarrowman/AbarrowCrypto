@@ -21,7 +21,7 @@ public class ZeroPaddingTest {
   public void testPad(int blockSize, byte[] input, byte[] expected) throws InterruptedException, IOException, CryptoException {
     ZeroPadding padding = new ZeroPadding(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.pad().startSync(new ByteArrayInputStream(input), o);
+    padding.pad().runSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.pad(input));
   }
@@ -29,7 +29,7 @@ public class ZeroPaddingTest {
   public void testUnpad(int blockSize, byte[] input, byte[] expected) throws InterruptedException, IOException {
     ZeroPadding padding = new ZeroPadding(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.unpad().startSync(new ByteArrayInputStream(input), o);
+    padding.unpad().runSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.unpad(input));
   }

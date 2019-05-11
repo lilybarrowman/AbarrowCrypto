@@ -77,7 +77,7 @@ public class HMAC implements MAC {
   }
 
   private byte[] innerHMAC(boolean tagOnly, OutputStream out, InputStream in) throws IOException {
-    ByteProcess hashProc = hasher.hash().asByteProcess(true);
+    ByteProcess hashProc = hasher.hash().createAsyncByteProcess();
     hashProc.add(iPadKey);
     
     byte[] buffer = new byte[blockBytes];
@@ -95,16 +95,16 @@ public class HMAC implements MAC {
     in.close();
     CryptoUtils.fillWithZeroes(buffer);
     
-    byte[] firstPass = hashProc.finishSync();
-    hashProc = hasher.hash().asByteProcess(false).add(oPadKey).add(firstPass);
+    byte[] firstPass = hashProc.finish();
+    hashProc = hasher.hash().createSyncByteProcess().add(oPadKey).add(firstPass);
     CryptoUtils.fillWithZeroes(firstPass);
-    return hashProc.finishSync();
+    return hashProc.finish();
   }
 
   @Override
   public byte[] tag(byte[] data, boolean tagOnly) throws CryptoException {
     try {
-      return tag(tagOnly).asByteProcess(false).add(data).finishSync();
+      return tag(tagOnly).runSync(data);
     } catch (IOException e) {
       throw new CryptoException(e);
     }
@@ -123,7 +123,7 @@ public class HMAC implements MAC {
   @Override
   public byte[] checkTag(byte[] data, boolean checkTagOnly) throws CryptoException {
     try {
-      return checkTag(checkTagOnly).asByteProcess(false).add(data).finishSync();
+      return checkTag(checkTagOnly).runSync(data);
     } catch (IOException e) {
       throw new CryptoException(e);
     }
@@ -138,7 +138,7 @@ public class HMAC implements MAC {
 
     if (key.length > blockBytes) {
       try {
-        key = hasher.hash().startSync(key);
+        key = hasher.hash().runSync(key);
       } catch (IOException e) {
         throw new CryptoException(e);
       }

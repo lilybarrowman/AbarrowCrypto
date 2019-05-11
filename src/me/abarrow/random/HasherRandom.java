@@ -28,7 +28,7 @@ public class HasherRandom extends BufferedRandom {
   @Override
   protected void generateMoreBytes(byte[] data) {    
     try {
-      hasher.hash().asByteProcess(false).add(key).add(counter.increment()).finishSync(data, 0);
+      hasher.hash().createSyncByteProcess().add(key).add(counter.increment()).finish(data, 0);
     } catch (IOException e) {
       //there's little we can do about this
     }

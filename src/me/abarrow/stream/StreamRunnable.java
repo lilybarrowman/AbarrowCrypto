@@ -1,8 +1,11 @@
 package me.abarrow.stream;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import me.abarrow.core.CryptoUtils;
 
 public abstract class StreamRunnable implements Runnable {
   private InputStream src;
@@ -67,9 +70,9 @@ public abstract class StreamRunnable implements Runnable {
    * @return 
    * @throws IOException
    */
-  public final InputStream startSync(InputStream in) throws IOException {
+  public final InputStream runSync(InputStream in) throws IOException {
     DynamicByteQueue q = new DynamicByteQueue();
-    startSync(in, q.getOutputStream(), true);
+    runSync(in, q.getOutputStream(), true);
     return q.getInputStream();
   }
   
@@ -78,19 +81,28 @@ public abstract class StreamRunnable implements Runnable {
     thread.start();
   }
   
-  public final ByteProcess asByteProcess(boolean async) {
-    return new ByteProcess(async, this);
+  public final SyncByteProcess createSyncByteProcess() {
+    return new SyncByteProcess(this);
   }
   
-  public final byte[] startSync(byte[] input) throws IOException {
-    return asByteProcess(false).add(input).finishSync();
+  public final AsyncByteProcess createAsyncByteProcess() {
+    return new AsyncByteProcess(this);
+  }
+  
+  public final byte[] runSync(byte[] input) throws IOException {
+    CopyFreeByteArrayOutputStream out = new CopyFreeByteArrayOutputStream();
+    process(new ByteArrayInputStream(input), out);
+    out.close();
+    byte[] output = out.toByteArray();
+    CryptoUtils.fillWithZeroes(out.getBuffer());
+    return output;
   }
 
-  public final OutputStream startSync(InputStream in, OutputStream out) throws IOException {
-    return startSync(in, out, true);
+  public final OutputStream runSync(InputStream in, OutputStream out) throws IOException {
+    return runSync(in, out, true);
   }
   
-  public final OutputStream startSync(InputStream in, OutputStream out, boolean closeWhenDone) throws IOException {
+  public final OutputStream runSync(InputStream in, OutputStream out, boolean closeWhenDone) throws IOException {
     src = in;
     dest = out;
     closeOnEnd = closeWhenDone;

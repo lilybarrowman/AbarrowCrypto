@@ -28,8 +28,8 @@ public class RC4Test {
   public void testExample(String keyString, String input, String expectedEncoding, int drop) throws IOException, CryptoException {
     byte[] key = keyString.getBytes();
     byte[] original =  input.getBytes();
-    byte[] encoded = new RC4(null, key, drop).encrypt().startSync(original);
-    byte[] decoded = new RC4(null, key, drop).decrypt().startSync(encoded);
+    byte[] encoded = new RC4(null, key, drop).encrypt().runSync(original);
+    byte[] decoded = new RC4(null, key, drop).decrypt().runSync(encoded);
     
     assertArrayEquals(original, decoded);
     assertEquals(expectedEncoding, CryptoUtils.byteArrayToHexString(encoded));

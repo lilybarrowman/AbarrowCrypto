@@ -15,16 +15,6 @@ public class SuffixStream extends InputStream {
   private InputStream inner;
   private int suffixDesiredLength;
   
-  class CopyFreeByteArrayOutputStream extends ByteArrayOutputStream {
-    public byte[] getBuffer() {
-      return buf;
-    }
-    
-    public int getCount() {
-      return count;
-    }
-  }
-  
   public SuffixStream(InputStream in, int suffixLength) throws IOException {
     suffixDesiredLength = suffixLength;
     

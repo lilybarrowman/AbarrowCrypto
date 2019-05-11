@@ -25,7 +25,7 @@ public class PKCS7Test {
       CryptoException {
     PKCS7 padding = new PKCS7(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.pad().startSync(new ByteArrayInputStream(input), o);
+    padding.pad().runSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.pad(input));
   }
@@ -33,7 +33,7 @@ public class PKCS7Test {
   public void testUnpad(int blockSize, byte[] input, byte[] expected) throws InterruptedException, IOException {
     PKCS7 padding = new PKCS7(blockSize);
     ByteArrayOutputStream o = new ByteArrayOutputStream();
-    padding.unpad().startSync(new ByteArrayInputStream(input), o);
+    padding.unpad().runSync(new ByteArrayInputStream(input), o);
     assertArrayEquals(expected, o.toByteArray());
     assertArrayEquals(expected, padding.unpad(input));
   }
@@ -51,12 +51,12 @@ public class PKCS7Test {
         parseHexBinary("6232d0a50c4e00a30cfb161bcc3a4dd84079a729f94dde6429887d8ba50752c906cb7d66533a3344438d921755681a12"),
         new CBCMode(new AES(parseHexBinary("123afc45778932543cdabb432645123afc457789b2543cdabb432645b4326408")),
             new PKCS7(), parseHexBinary("8051f5bb13d68fcb5f8e25dd890228ac")).setIVPrepending(false)
-            .encrypt().startSync(parseHexBinary("48656c6c6f20686f772061726520796f752c2061726520796f752061207261626269743f")));
+            .encrypt().runSync(parseHexBinary("48656c6c6f20686f772061726520796f752c2061726520796f752061207261626269743f")));
     assertArrayEquals(
         parseHexBinary("48656c6c6f20686f772061726520796f752c2061726520796f752061207261626269743f"),
         new CBCMode(new AES(parseHexBinary("123afc45778932543cdabb432645123afc457789b2543cdabb432645b4326408")),
             new PKCS7(), parseHexBinary("8051f5bb13d68fcb5f8e25dd890228ac")).setIVPrepending(false)
-            .decrypt().startSync(parseHexBinary("6232d0a50c4e00a30cfb161bcc3a4dd84079a729f94dde6429887d8ba50752c906cb7d66533a3344438d921755681a12")));
+            .decrypt().runSync(parseHexBinary("6232d0a50c4e00a30cfb161bcc3a4dd84079a729f94dde6429887d8ba50752c906cb7d66533a3344438d921755681a12")));
   }
 
 }
