@@ -1,12 +1,12 @@
 package me.abarrow.cipher;
 
 import me.abarrow.core.CryptoException;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public interface Cipher {
   
-  public StreamRunnable encrypt();
-  public StreamRunnable decrypt();
+  public StreamProcess encrypt();
+  public StreamProcess decrypt();
   
   public Cipher setKey(byte[] key) throws CryptoException;
   public boolean hasKey();

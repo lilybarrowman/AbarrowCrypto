@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import me.abarrow.core.CryptoException;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 import me.abarrow.stream.StreamUtils;
 
 public class PKCS7 extends Padding {
@@ -42,8 +42,8 @@ public class PKCS7 extends Padding {
   }
 
   @Override
-  public StreamRunnable pad() throws IOException {
-    return new StreamRunnable() {
+  public StreamProcess pad() throws IOException {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (blockSize == 0) {
@@ -71,8 +71,8 @@ public class PKCS7 extends Padding {
   }
 
   @Override
-  public StreamRunnable unpad() throws IOException {
-    return new StreamRunnable() {
+  public StreamProcess unpad() throws IOException {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (blockSize == 0) {

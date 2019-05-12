@@ -8,9 +8,9 @@ public final class AsyncByteProcess extends ByteProcess {
   
   private DynamicByteQueue pre;
   private DynamicByteQueue post;
-  private StreamRunnable runnable;
+  private StreamProcess runnable;
   
-  public AsyncByteProcess(StreamRunnable r) {
+  public AsyncByteProcess(StreamProcess r) {
     pre = new DynamicByteQueue();
     post = new DynamicByteQueue();
     runnable = r;

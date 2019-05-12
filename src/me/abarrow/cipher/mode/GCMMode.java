@@ -15,7 +15,7 @@ import me.abarrow.core.CryptoUtils;
 import me.abarrow.mac.MAC;
 import me.abarrow.mac.gcmac.GCMMAC;
 import me.abarrow.math.Int128;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public class GCMMode implements AuthenticatedCipher {
   
@@ -80,8 +80,8 @@ public class GCMMode implements AuthenticatedCipher {
   }
 
 	@Override
-	public StreamRunnable encrypt() {
-		return new StreamRunnable() {
+	public StreamProcess encrypt() {
+		return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (!hasIV()) {
@@ -114,7 +114,7 @@ public class GCMMode implements AuthenticatedCipher {
 	}
 
 	@Override
-	public StreamRunnable decrypt() {
+	public StreamProcess decrypt() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -11,7 +11,7 @@ import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.counter.BigIntCounter;
 import me.abarrow.counter.Counter;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public class CTRMode implements Cipher {
   
@@ -42,8 +42,8 @@ public class CTRMode implements Cipher {
   }
   
   @Override
-  public StreamRunnable encrypt() {
-    return new StreamRunnable(){
+  public StreamProcess encrypt() {
+    return new StreamProcess(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         encryptOrDecrypt(in, out, true);
@@ -88,8 +88,8 @@ public class CTRMode implements Cipher {
   }
 
   @Override
-  public StreamRunnable decrypt() {
-    return new StreamRunnable(){
+  public StreamProcess decrypt() {
+    return new StreamProcess(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         encryptOrDecrypt(in, out, false);

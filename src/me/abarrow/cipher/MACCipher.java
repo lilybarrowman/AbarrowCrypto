@@ -6,6 +6,8 @@ import java.io.OutputStream;
 
 import me.abarrow.core.CryptoException;
 import me.abarrow.mac.MAC;
+import me.abarrow.stream.DynamicByteQueue;
+import me.abarrow.stream.StreamProcess;
 import me.abarrow.stream.StreamRunnable;
 
 public class MACCipher implements AuthenticatedCipher {
@@ -19,25 +21,33 @@ public class MACCipher implements AuthenticatedCipher {
   }
 
   @Override
-  public final StreamRunnable encrypt() {
-    return new StreamRunnable() {
+  public final StreamProcess encrypt() {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        StreamRunnable encrypt = cipher.encrypt();
-        mac.tag(false).runSync(encrypt.startAsync(in), out);
-        encrypt.throwIfFailed();
+        StreamRunnable.InPair encrypt = cipher.encrypt().startAsync(in);
+        try {
+          mac.tag(false).runSync(encrypt.getInputStream(), out);
+          encrypt.getRunnable().throwIfFailed();
+        } finally {
+          encrypt.getInputStream().close();
+        }
       }
     };
   }
 
   @Override
-  public StreamRunnable decrypt() {
-    return new StreamRunnable() {
+  public StreamProcess decrypt() {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
-        StreamRunnable checkTag = mac.checkTag(false);
-        cipher.decrypt().runSync(checkTag.startAsync(in), out);
-        checkTag.throwIfFailed();
+        StreamRunnable.InPair checkTag = mac.checkTag(false).startAsync(in);
+        try {
+          cipher.decrypt().runSync(checkTag.getInputStream(), out);
+          checkTag.getRunnable().throwIfFailed();
+        } finally {
+          checkTag.getInputStream().close();
+        }
       }
     };
   }

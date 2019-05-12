@@ -1,29 +1,33 @@
 package me.abarrow.stream;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import me.abarrow.core.CryptoUtils;
-
-public abstract class StreamRunnable implements Runnable {
+public class StreamRunnable implements Runnable {
+  
   private InputStream src;
   private OutputStream dest;
-  private InputStream related;
+  private StreamProcess processor;
   private boolean closeOnEnd;
-  private IOException failure;  
+
   
-  public abstract void process(InputStream in, OutputStream out) throws IOException;
+  private IOException failure = null;  
+  
+  public StreamRunnable(InputStream in, OutputStream out, StreamProcess proc, boolean closeWhenDone) {
+    src = in;
+    dest = out;
+    processor = proc;
+    closeOnEnd = closeWhenDone;
+  }
   
   @Override
   public final void run() {
     try {
-      process(src, dest);
+      processor.process(src, dest);
     } catch (IOException e) {
       e.printStackTrace();
       StreamUtils.quitelyClose(dest);
-      StreamUtils.quitelyClose(related);
       flagFailure(e);
     } finally {
       StreamUtils.quitelyClose(src);
@@ -31,7 +35,6 @@ public abstract class StreamRunnable implements Runnable {
         StreamUtils.quitelyClose(dest);
       }
     }
-    
   }
   
   private synchronized final void flagFailure(IOException failureReason) {
@@ -44,7 +47,6 @@ public abstract class StreamRunnable implements Runnable {
     }
   }
   
-  
   public synchronized final boolean didFail() {
     return (failure != null);
   }
@@ -53,71 +55,31 @@ public abstract class StreamRunnable implements Runnable {
     return failure;
   }
   
-  public final InputStream startAsync(InputStream in) throws IOException {
-    src = in;
-    closeOnEnd = true;
-    DynamicByteQueue q = new DynamicByteQueue();
-    dest = q.getOutputStream();
-    related = q.getInputStream();
-    startOnNewThread();
-    return related;
-  }
-  
-  /**
-   * This can potentially use up a crazy high amount of RAM, since it buffers the entire output before returning,
-   * so be careful what input streams you use it with.
-   * @param in
-   * @return 
-   * @throws IOException
-   */
-  public final InputStream runSync(InputStream in) throws IOException {
-    DynamicByteQueue q = new DynamicByteQueue();
-    runSync(in, q.getOutputStream(), true);
-    return q.getInputStream();
-  }
-  
-  private void startOnNewThread() {
+  public StreamRunnable startOnNewThread() {
     Thread thread = new Thread(this); //this should be replaced to use thread pools of some sort
     thread.start();
+    return this;
   }
   
-  public final SyncByteProcess createSyncByteProcess() {
-    return new SyncByteProcess(this);
-  }
   
-  public final AsyncByteProcess createAsyncByteProcess() {
-    return new AsyncByteProcess(this);
-  }
-  
-  public final byte[] runSync(byte[] input) throws IOException {
-    CopyFreeByteArrayOutputStream out = new CopyFreeByteArrayOutputStream();
-    process(new ByteArrayInputStream(input), out);
-    out.close();
-    byte[] output = out.toByteArray();
-    CryptoUtils.fillWithZeroes(out.getBuffer());
-    return output;
-  }
-
-  public final OutputStream runSync(InputStream in, OutputStream out) throws IOException {
-    return runSync(in, out, true);
-  }
-  
-  public final OutputStream runSync(InputStream in, OutputStream out, boolean closeWhenDone) throws IOException {
-    src = in;
-    dest = out;
-    closeOnEnd = closeWhenDone;
-    run();
-    if (didFail()) {
-      throw getFailureReason();
+  public static class InPair {
+    private StreamRunnable runnable;
+    private InputStream inputStream;
+    
+    public InPair(StreamRunnable runner, InputStream src) {
+      runnable = runner;
+      inputStream = src;
     }
-    return out;
+
+    public StreamRunnable getRunnable() {
+      return runnable;
+    }
+    
+    public InputStream getInputStream() {
+      return inputStream;
+    }
+    
+    
   }
   
-  public final void startAsync(InputStream in, OutputStream out, boolean closeWhenDone) {
-    src = in;
-    dest = out;
-    closeOnEnd = closeWhenDone;
-    startOnNewThread();
-  }
-
 }

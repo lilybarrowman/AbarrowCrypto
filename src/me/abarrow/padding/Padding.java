@@ -2,7 +2,7 @@ package me.abarrow.padding;
 
 import java.io.IOException;
 
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public abstract class Padding {
   protected int blockSize;
@@ -29,6 +29,6 @@ public abstract class Padding {
   
   public abstract byte[] pad(byte[] input, int start, int len);
   public abstract byte[] unpad(byte[] input, int start, int len);
-  public abstract StreamRunnable pad() throws IOException;
-  public abstract StreamRunnable unpad() throws IOException;
+  public abstract StreamProcess pad() throws IOException;
+  public abstract StreamProcess unpad() throws IOException;
 }

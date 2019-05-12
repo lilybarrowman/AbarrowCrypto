@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import me.abarrow.core.CryptoUtils;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public abstract class Hasher {
   
@@ -20,8 +20,8 @@ public abstract class Hasher {
   
   protected abstract byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength);
   
-  public final StreamRunnable hash() {
-    return new StreamRunnable(){
+  public final StreamProcess hash() {
+    return new StreamProcess(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         reset();

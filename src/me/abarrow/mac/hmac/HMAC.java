@@ -10,7 +10,7 @@ import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.Hasher;
 import me.abarrow.mac.MAC;
 import me.abarrow.stream.ByteProcess;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 import me.abarrow.stream.SuffixStream;
 
 public class HMAC implements MAC {
@@ -41,8 +41,8 @@ public class HMAC implements MAC {
     return hashByteLength;
   }
 
-  public StreamRunnable tag(final boolean tagOnly) {
-    return new StreamRunnable() {
+  public StreamProcess tag(final boolean tagOnly) {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         streamTag(tagOnly, in, out);
@@ -111,8 +111,8 @@ public class HMAC implements MAC {
   }
   
   @Override
-  public StreamRunnable checkTag(final boolean checkTagOnly) {
-    return new StreamRunnable(){
+  public StreamProcess checkTag(final boolean checkTagOnly) {
+    return new StreamProcess(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         streamCheckTag(checkTagOnly, in, out);

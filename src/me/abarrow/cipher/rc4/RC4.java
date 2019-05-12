@@ -9,7 +9,7 @@ import me.abarrow.cipher.Cipher;
 import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.mac.MAC;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public class RC4 implements Cipher {
 
@@ -83,8 +83,8 @@ public class RC4 implements Cipher {
   }
   
   @Override
-  public StreamRunnable encrypt() {
-    return new StreamRunnable(){
+  public StreamProcess encrypt() {
+    return new StreamProcess(){
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         try {
@@ -119,7 +119,7 @@ public class RC4 implements Cipher {
   }
 
   @Override
-  public StreamRunnable decrypt() {
+  public StreamProcess decrypt() {
     return encrypt();
   }
   

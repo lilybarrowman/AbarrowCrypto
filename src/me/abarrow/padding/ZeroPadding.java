@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import me.abarrow.core.CryptoUtils;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 import me.abarrow.stream.StreamUtils;
 
 public class ZeroPadding extends Padding {
@@ -36,8 +36,8 @@ public class ZeroPadding extends Padding {
   }
 
   @Override
-  public StreamRunnable pad() throws IOException {
-    return new StreamRunnable() {
+  public StreamProcess pad() throws IOException {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (blockSize == 0) {
@@ -63,8 +63,8 @@ public class ZeroPadding extends Padding {
   }
 
   @Override
-  public StreamRunnable unpad() throws IOException {
-    return new StreamRunnable() {
+  public StreamProcess unpad() throws IOException {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         StreamUtils.copyStream(in, out);

@@ -10,7 +10,7 @@ import me.abarrow.cipher.Cipher;
 import me.abarrow.core.CryptoException;
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.padding.Padding;
-import me.abarrow.stream.StreamRunnable;
+import me.abarrow.stream.StreamProcess;
 
 public class CBCMode implements Cipher {
 
@@ -33,8 +33,8 @@ public class CBCMode implements Cipher {
   }
   
   @Override
-  public StreamRunnable encrypt() {
-    return new StreamRunnable() {
+  public StreamProcess encrypt() {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (!hasIV()) {
@@ -75,8 +75,8 @@ public class CBCMode implements Cipher {
   }
 
   @Override
-  public StreamRunnable decrypt() {
-    return new StreamRunnable() {
+  public StreamProcess decrypt() {
+    return new StreamProcess() {
       @Override
       public void process(InputStream in, OutputStream out) throws IOException {
         if (!hasIV()) {

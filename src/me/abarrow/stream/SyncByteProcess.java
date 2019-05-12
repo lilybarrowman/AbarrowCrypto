@@ -8,9 +8,9 @@ public final class SyncByteProcess extends ByteProcess {
   
   private DynamicByteQueue pre;
   private DynamicByteQueue post;
-  private StreamRunnable runnable;
+  private StreamProcess runnable;
   
-  public SyncByteProcess(StreamRunnable r) {
+  public SyncByteProcess(StreamProcess r) {
     pre = new DynamicByteQueue();
     post = new DynamicByteQueue();
     runnable = r;

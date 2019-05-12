@@ -1,5 +1,7 @@
 package me.abarrow.stream;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -270,5 +272,5 @@ public class DynamicByteQueue {
   public boolean isDoneWriting() {
     return isDoneWriting;
   }
-
+  
 }
