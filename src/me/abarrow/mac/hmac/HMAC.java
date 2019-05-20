@@ -77,28 +77,45 @@ public class HMAC implements MAC {
   }
 
   private byte[] innerHMAC(boolean tagOnly, OutputStream out, InputStream in) throws IOException {
-    ByteProcess hashProc = hasher.hash().createAsyncByteProcess();
-    hashProc.add(iPadKey);
+    //ByteProcess hashProc = hasher.hash().createAsyncByteProcess();
+    //hashProc.add(iPadKey);
+    
+    
+    
+    hasher.reset();
+    hasher.hashBlock(iPadKey, 0);
     
     byte[] buffer = new byte[blockBytes];
+    byte[] firstPass = null;
     while (true) {
       int read = in.read(buffer);
       if (read == -1) {
         break;
+      } else if (read == blockBytes) {
+        hasher.hashBlock(buffer, 0);
+        if (!tagOnly) {
+          out.write(buffer, 0, read);
+        }
       } else {
-        hashProc.add(buffer, 0, read);
+        firstPass = hasher.computeHash(buffer, read);
         if (!tagOnly) {
           out.write(buffer, 0, read);
         }
       }
     }
     in.close();
+    
     CryptoUtils.fillWithZeroes(buffer);
     
-    byte[] firstPass = hashProc.finish();
-    hashProc = hasher.hash().createSyncByteProcess().add(oPadKey).add(firstPass);
+    if (firstPass == null) {
+      firstPass = hasher.computeHash(buffer, 0);
+    }
+        
+    hasher.hashBlock(oPadKey, 0);
+    byte[] hash = hasher.computeHash(firstPass, hasher.getHashByteLength());
+    
     CryptoUtils.fillWithZeroes(firstPass);
-    return hashProc.finish();
+    return hash;
   }
 
   @Override

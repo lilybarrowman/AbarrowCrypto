@@ -47,20 +47,22 @@ public class SHA512 extends Hasher {
   @Override
   public final byte[] computeHash(byte[] remainder, int remainderLength) {
     hashByteCount.plusEquals(remainderLength);
+    byte[] block = new byte[BLOCK_BYTES];
+    System.arraycopy(remainder, 0, block, 0, remainderLength);
 
     if (remainderLength == 0) {
-      fillPadding(remainder, 0);
-      innerHashBlock(remainder, 0);
+      fillPadding(block, 0);
+      innerHashBlock(block, 0);
     } else if ((SHA512.BLOCK_BYTES - remainderLength) < SHA512.MIN_PADDING_BYTES) {
-      remainder[remainderLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-      innerHashBlock(remainder, 0);
+      block[remainderLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
+      innerHashBlock(block, 0);
                 
-      Arrays.fill(remainder, 0, remainder.length, (byte)0);
-      appendWithLength(remainder);
-      innerHashBlock(remainder, 0);
+      Arrays.fill(block, 0, block.length, (byte)0);
+      appendWithLength(block);
+      innerHashBlock(block, 0);
     } else {
-      fillPadding(remainder, remainderLength);
-      innerHashBlock(remainder, 0);
+      fillPadding(block, remainderLength);
+      innerHashBlock(block, 0);
     }
     byte[] result = CryptoUtils.longArrayToByteArray(new byte[getHashByteLength()], 0, hash, hash.length, false);
     reset();
