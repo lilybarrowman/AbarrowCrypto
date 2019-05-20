@@ -10,7 +10,7 @@ public class SHA1 extends SHA32Hash {
   
   private static final int[] CONSTANTS = new int[] { 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
   
-  protected void hashBlock(byte[] bytes, int start) {
+  protected void innerHashBlock(byte[] bytes, int start) {
     int a = hash[0];
     int b = hash[1];
     int c = hash[2];

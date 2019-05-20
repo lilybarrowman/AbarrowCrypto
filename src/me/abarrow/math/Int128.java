@@ -23,6 +23,15 @@ public class Int128 extends Number {
     words = new int[] {lowest, low, high, highest};
   }
   
+  public Int128(int from) {
+    words = new int[] {from, 0, 0, 0};
+  }
+  
+  public Int128(long from) {
+    words = new int[] {(int)(from & 0xffffffff), (int)((from >>> 32) & 0xffffffff), 0, 0};
+  }
+  
+  
   public Int128(int[] w) {
     words = Arrays.copyOf(w, WORD_COUNT);
   }
@@ -76,6 +85,47 @@ public class Int128 extends Number {
     
     for (int i = 0; i < WORD_COUNT; i++) {
       dest.words[i] = left.words[i] ^ right.words[i];
+    }
+  }
+  
+  public void plusEquals(final Int128 other) {
+    long carry = 0;
+    for (int i = 0; i < WORD_COUNT; i++) {
+      long sum = (long)(words[i]) + (long)(other.words[i]) + carry;
+      carry = sum >>> WORD_SIZE;
+      words[i] = (int)sum;
+    }
+  }
+  
+  public void plusEquals(int other) {
+    long carry = 0;
+    long sum = (long)(words[0]) + (long)(other) + carry;
+    carry = sum >>> WORD_SIZE;
+    words[0] = (int)sum;
+    for (int i = 1; i < WORD_COUNT; i++) {
+      sum = (long)(words[i]) + carry;
+      carry = sum >>> WORD_SIZE;
+      words[i] = (int)sum;
+    }
+  }
+  
+  public void plusEquals(long other) {
+    long otherLowest = other & 0xffffffff;
+    long otherLow = (other >>> 32) & 0xffffffff;
+    
+    long carry = 0;
+    long sum = (long)(words[0]) + otherLowest + carry;
+    carry = sum >>> WORD_SIZE;
+    words[0] = (int)sum;
+    
+    sum = (long)(words[1]) + otherLow + carry;
+    carry = sum >>> WORD_SIZE;
+    words[1] = (int)sum;
+    
+    for (int i = 2; i < WORD_COUNT; i++) {
+      sum = (long)(words[i]) + carry;
+      carry = sum >>> WORD_SIZE;
+      words[i] = (int)sum;
     }
   }
   
@@ -223,6 +273,18 @@ public class Int128 extends Number {
   
   public byte[] toLittleEndianBytes(byte[] dest) {
     return CryptoUtils.intArrayToByteArray(dest, 0, words, true);
+  }
+  
+  public byte[] toLittleEndianBytes(byte[] dest, int start) {
+    return CryptoUtils.intArrayToByteArray(dest, start, words, true);
+  }
+  
+  public byte[] toBigEndianBytes(byte[] dest, int start) {
+    CryptoUtils.intToBytes(words[0], dest, start + 12, false);
+    CryptoUtils.intToBytes(words[1], dest, start + 8, false);
+    CryptoUtils.intToBytes(words[2], dest, start + 4, false);
+    CryptoUtils.intToBytes(words[3], dest, start, false);
+    return dest;
   }
   
   public byte[] toLittleBitEndianBytes(byte[] dest) {

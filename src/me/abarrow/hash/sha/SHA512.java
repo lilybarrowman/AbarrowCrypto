@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import me.abarrow.core.CryptoUtils;
 import me.abarrow.hash.Hasher;
+import me.abarrow.math.Int128;
 
 public class SHA512 extends Hasher {
   
@@ -44,36 +45,41 @@ public class SHA512 extends Hasher {
   }
 
   @Override
-  protected final byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength) {    
+  public final byte[] computeHash(byte[] remainder, int remainderLength) {
+    hashByteCount.plusEquals(remainderLength);
+
     if (remainderLength == 0) {
-      fillPadding(dataLength, remainder, 0);
-      hashBlock(remainder, 0);
+      fillPadding(remainder, 0);
+      innerHashBlock(remainder, 0);
     } else if ((SHA512.BLOCK_BYTES - remainderLength) < SHA512.MIN_PADDING_BYTES) {
       remainder[remainderLength] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-      hashBlock(remainder, 0);
+      innerHashBlock(remainder, 0);
                 
       Arrays.fill(remainder, 0, remainder.length, (byte)0);
-      appendWithLength(dataLength, remainder);
-      hashBlock(remainder, 0);
+      appendWithLength(remainder);
+      innerHashBlock(remainder, 0);
     } else {
-      fillPadding(dataLength, remainder, remainderLength);
-      hashBlock(remainder, 0);
+      fillPadding(remainder, remainderLength);
+      innerHashBlock(remainder, 0);
     }
     byte[] result = CryptoUtils.longArrayToByteArray(new byte[getHashByteLength()], 0, hash, hash.length, false);
     reset();
     return result;
   }
   
-  private void fillPadding(BigInteger dataLength, byte[] padded, int startIndex) {
+  private void fillPadding(byte[] padded, int startIndex) {
     padded[startIndex] = CryptoUtils.ONE_AND_SEVEN_ZEROES_BYTE;
-    appendWithLength(dataLength, padded);
+    appendWithLength(padded);
   }
   
-  private void appendWithLength(BigInteger dataLength, byte[] padded) {
-    CryptoUtils.fillLastBytes(dataLength.multiply(BigInteger.valueOf(8)).toByteArray(), padded, 16);
+  private void appendWithLength(byte[] padded) {
+    Int128 eight = new Int128(8);
+    Int128 dest = new Int128();
+    Int128.times(hashByteCount, eight, dest);
+    dest.toBigEndianBytes(padded, padded.length - 16);
   }
   
-  protected void hashBlock(byte[] bytes, int start) {
+  private void innerHashBlock(byte[] bytes, int start) {
     long a = hash[0];
     long b = hash[1];
     long c = hash[2];
@@ -112,9 +118,14 @@ public class SHA512 extends Hasher {
     hash[6] = g + hash[6];
     hash[7] = h + hash[7];
   }
+  
+  public void hashBlock(byte[] bytes, int start) {
+    hashByteCount.plusEquals(BLOCK_BYTES);
+    innerHashBlock(bytes, start);
+  }
 
   @Override
-  protected void reset() {
+  public void reset() {
     super.reset();
     if (hash == null) {
       hash = Arrays.copyOf(SHA512.INITIAL_HASHES, 8);

@@ -21,7 +21,7 @@ public class MD5 extends SHA32Hash {
   private static final int BLOCK_BITS = 512;
   private static final int BLOCK_BYTES = MD5.BLOCK_BITS / 8;
   
-  protected void hashBlock(byte[] bytes, int start) {
+  protected void innerHashBlock(byte[] bytes, int start) {
     int A = hash[0];
     int B = hash[1];
     int C = hash[2];

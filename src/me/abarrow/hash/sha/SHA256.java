@@ -22,7 +22,7 @@ public class SHA256 extends SHA32Hash {
   private static final int BLOCK_BYTES = 64;
   
   @Override
-  protected void hashBlock(byte[] data, int srcPos) {
+  protected void innerHashBlock(byte[] data, int srcPos) {
     int a = hash[0];
     int b = hash[1];
     int c = hash[2];

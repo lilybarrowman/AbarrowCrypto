@@ -63,7 +63,7 @@ public class SHA3 extends Hasher {
   }
 
   @Override
-  protected final byte[] computeHash(BigInteger dataLength, byte[] remainder, int remainderLength) {
+  public final byte[] computeHash(byte[] remainder, int remainderLength) {
     if (remainderLength == 0) {
       if (mode == SHA3Mode.KECCAK) {
         remainder[0] = (byte) 0x1; // Keccak 0000 0001
@@ -96,7 +96,7 @@ public class SHA3 extends Hasher {
   }
 
   @Override
-  protected void reset() {
+  public void reset() {
     super.reset();
     if (state != null) {
       CryptoUtils.fillWithZeroes(state);
@@ -195,7 +195,7 @@ public class SHA3 extends Hasher {
   }*/
 
   @Override
-  protected void hashBlock(byte[] data, int startIndex) {    
+  public void hashBlock(byte[] data, int startIndex) {    
     CryptoUtils.xorLongArrayFromBytes(state, 0, data, startIndex, blockBytes / 8, true);
     
     // perform a block permutation
