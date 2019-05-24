@@ -2,8 +2,6 @@ package me.abarrow.math;
 
 import java.util.Arrays;
 
-import javax.xml.bind.DatatypeConverter;
-
 import me.abarrow.core.CryptoUtils;
 
 public class Int128 extends Number {
@@ -229,14 +227,14 @@ public class Int128 extends Number {
   }
   
   public static Int128 parseLittleBitEndianHex(String s) {
-    byte[] bytes = DatatypeConverter.parseHexBinary(s);
+    byte[] bytes = CryptoUtils.parseHexString(s);
     Int128 parsed = fromLittleBitEndian(bytes);
     CryptoUtils.fillWithZeroes(bytes);
     return parsed;
   }
   
   public static Int128 parseBigEndianHex(String s) {
-    byte[] bytes = DatatypeConverter.parseHexBinary(s);
+    byte[] bytes = CryptoUtils.parseHexString(s);
     Int128 parsed = new Int128(
       CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 1),
       CryptoUtils.safeBigEndianIntFromBytes(bytes, bytes.length - 5),

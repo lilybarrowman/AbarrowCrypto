@@ -13,7 +13,6 @@ import me.abarrow.hash.sha.SHA256;
 import me.abarrow.mac.MAC;
 import me.abarrow.mac.hmac.HMAC;
 import me.abarrow.padding.ZeroPadding;
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 import org.junit.Test;
 
@@ -26,8 +25,8 @@ public class MACCipherTest {
     String plainString = "I blame the angry foxes for her death!";
     byte[] plain = plainString.getBytes();
     
-    byte[] expectedEncrypted = parseHexBinary("0b47b1f05656b6ff4daa98ce50136f56f81ae812e2f96c8035f73e8e81765587f302739bc2d34e63d3c17e52decfe550");
-    byte[] expectedTagged = parseHexBinary("0b47b1f05656b6ff4daa98ce50136f56f81ae812e2f96c8035f73e8e81765587f302739bc2d34e63d3c17e52decfe550b1123c3a17c1861c2a41ae75c0433a137d978ed5e3204b70a21c97739bcb23a2");
+    byte[] expectedEncrypted = CryptoUtils.parseHexString("0b47b1f05656b6ff4daa98ce50136f56f81ae812e2f96c8035f73e8e81765587f302739bc2d34e63d3c17e52decfe550");
+    byte[] expectedTagged = CryptoUtils.parseHexString("0b47b1f05656b6ff4daa98ce50136f56f81ae812e2f96c8035f73e8e81765587f302739bc2d34e63d3c17e52decfe550b1123c3a17c1861c2a41ae75c0433a137d978ed5e3204b70a21c97739bcb23a2");
     
     
     Cipher cipher = new ECBMode(new AES(), new ZeroPadding());

@@ -2,7 +2,6 @@ package me.abarrow.core;
 
 import java.io.IOException;
 import java.util.Arrays;
-import javax.xml.bind.DatatypeConverter;
 
 public class CryptoUtils {
   
@@ -11,6 +10,25 @@ public class CryptoUtils {
   public static final byte ONE_AND_SEVEN_ZEROES_BYTE = (byte) 0x80;
   public static final byte ZERO_BYTE = (byte) 0;
   public static final byte ONE_BYTE = (byte) 1;
+  
+  private static char[] NIBBLE_CHARS = new char[] {
+      '0',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+      'f'
+  };
 
   private static int[] LAST_N_BITS = new int[] {
       // [0] 0000 0000
@@ -447,11 +465,38 @@ public class CryptoUtils {
   }
 
   public static String byteArrayToHexString(byte[] bytes) {
-    return DatatypeConverter.printHexBinary(bytes).toLowerCase();
+    //return DatatypeConverter.printHexBinary(bytes).toLowerCase();
+    
+    StringBuilder builder = new StringBuilder();
+    
+    for (byte b : bytes) {
+      int iv = b & 0xff;
+      int low = iv & 0xf;
+      int high = (iv >>> 4) & 0xf;
+      builder.append(NIBBLE_CHARS[high]);
+      builder.append(NIBBLE_CHARS[low]);
+    }
+    
+    return builder.toString();
+  }
+  
+  private static final int parseHexChar(int codePoint) {
+    if ((codePoint >= 'a') && (codePoint <= 'f')) {
+      return 10 + codePoint - 'a';
+    } else if ((codePoint >= '0') && (codePoint <= '9')) {
+      return codePoint - '0';
+    } else {
+      throw new IllegalArgumentException("Cannot parse hex char [" + new String(Character.toChars(codePoint)) + "]");
+    }
   }
 
-  public static byte[] hexStringToBytes(String hex) {
-    return DatatypeConverter.parseHexBinary(hex);
+  public static byte[] parseHexString(String hex) {
+    int[] codePoints = hex.toLowerCase().codePoints().toArray();
+    byte[] out = new byte[codePoints.length / 2];
+    for (int n = 0; n < out.length; n++) {
+      out[n] = (byte)((parseHexChar(codePoints[2 * n]) << 4) | parseHexChar(codePoints[2 * n + 1]));
+    }
+    return out;
   }
 
   public static String hexStringToBinaryString(String hex) {

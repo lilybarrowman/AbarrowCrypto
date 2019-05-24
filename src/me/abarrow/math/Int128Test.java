@@ -2,8 +2,6 @@ package me.abarrow.math;
 
 import static org.junit.Assert.*;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.junit.Test;
 
 import me.abarrow.core.CryptoUtils;
@@ -64,10 +62,10 @@ public class Int128Test {
 	  public void endians_test() {
 	    Int128 spare = new Int128();
 	    Int128 dest = new Int128();
-	    Int128 left = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(DatatypeConverter.parseHexBinary("0388dace60b6a392f328c2b971b2fe78")));
-	    Int128 right = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(DatatypeConverter.parseHexBinary("66e94bd4ef8a2c3b884cfa59ca342b2e")));
+	    Int128 left = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(CryptoUtils.parseHexString("0388dace60b6a392f328c2b971b2fe78")));
+	    Int128 right = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(CryptoUtils.parseHexString("66e94bd4ef8a2c3b884cfa59ca342b2e")));
 	    
-	    String expected = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(DatatypeConverter.parseHexBinary("5e2ec746917062882c85b0685353deb7"))).toHexString();
+	    String expected = Int128.fromLittleEndian(CryptoUtils.littleBitEndianToLittleEndian(CryptoUtils.parseHexString("5e2ec746917062882c85b0685353deb7"))).toHexString();
 	    Int128.finiteTimes(left, right, dest, spare);
 	    assertEquals(expected, dest.toHexString());
 
